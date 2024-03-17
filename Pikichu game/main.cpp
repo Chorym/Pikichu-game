@@ -145,7 +145,7 @@ void removeSelectedCell(int** game_board_array, int position_x, int position_y)
 	setCursorPosition(position_x * 6 + 1, position_y * 4 + 3);
 	cout << "| " << game_board_array[position_y][position_x] << " |" << "\n";
 	setCursorPosition(position_x * 6 + 1, position_y * 4 + 4);
-	cout << "|   |";
+	cout << "|___|";
 }
 
 //find if the 2 selected cells are connectable
