@@ -4,7 +4,11 @@
 #include <algorithm>
 
 #include <string>
+
 #include <Windows.h>
+#include <mmsystem.h>
+#include <playsoundapi.h>
+#pragma comment(lib, "Winmm.lib")
 
 #include <utility>
 #include <fstream>
@@ -23,18 +27,19 @@ typedef pair<int, int> Point;
 
 //declaration
 void setCursorPosition(int x, int y);
-void clear2DArray(int** array, int length);
-int** generateGameBoard(int length, int width);
-void drawGameBoard(int** game_board_array, int length, int width);
+void clear2DArray(int** array, int board_y);
+int** generateGameBoard(int board_y, int board_x);
+void drawGameBoard(int** game_board_array, int board_y, int board_x);
 void drawCurrentCell(int** game_board_array, int current_position_x, int current_position_y, int previous_position_x, int previous_position_y, Point selected_points[2]);
 void selectCell(int** game_board_array, int position_x, int position_y);
 void deselecteCell(int** game_board_array, int position_x, int position_y);
-void pathfinding2Cells(Point selected_points[2], int** game_board_array);
-void mainGameLoop(int board_length, int board_width);
+bool pathfinding2Cells(Point selected_points[2], int** game_board_array, int board_x, int board_y);
+void mainGameLoop(int board_y, int board_x);
 void printSettingsMenu(int current_option, int previous_option, int volume, bool light_mode, bool change_option);
 void printMainMenu(int current_option, int previous_option, bool change_option);
 void printGameplayPresetScreen(int current_option, int previous_option, int difficulty, int time, int size, bool change_option);
 void menuInteraction();
+//BOOL WINAPI ConsoleHandler(DWORD dwCtrlType);
 //
 
 /*
@@ -63,6 +68,7 @@ one word, captital first letter
 //move cursor to x;y on the console
 //x is the horizontal axis
 //y is the vertical axis
+
 void setCursorPosition(int x, int y)
 {
 	cout << "\x1b[" << y << ";" << x << "H";
@@ -282,7 +288,7 @@ void menuInteraction()
 				volume--;
 				if (volume < 1) volume = 10;
 				printSettingsMenu(current_option, previous_option, volume, light_mode, true);
-				PlaySound(L"break.wav", GetModuleHandle(NULL), SND_SYNC);
+				PlaySound(L"C:\\Users\\PC\\source\\repos\\Pikichu game\\SFX\\break.wav", NULL, SND_FILENAME | SND_ASYNC);
 				Sleep(200);
 			}
 			if (current_option == 2)
@@ -370,21 +376,16 @@ void menuInteraction()
 	}
 }
 
-bool isObstructed(int** game_board_array, Point point)
+bool isObstructed(Point point, int** game_board_array)
 {
 	if (game_board_array[point.second][point.first] == -1) return false;
 	else return true;
 }
 
-bool isStraightLine(Point selected_points[2], int** game_board_array)
+bool isStraightLine(Point start, Point end, int** game_board_array)
 {
-	int start_x = selected_points[0].first;
-	int start_y = selected_points[0].second;
-	int end_x = selected_points[1].first;
-	int end_y = selected_points[1].second;
-
-	int distance_x = end_x - start_x;
-	int distance_y = end_y - start_y;
+	int distance_x = end.first - start.first;
+	int distance_y = end.second - start.second;
 
 	//if the cells are next to each other
 	if ((abs(distance_x) == 1 && distance_y == 0) || (distance_x == 0 && abs(distance_y) == 1))
@@ -396,14 +397,14 @@ bool isStraightLine(Point selected_points[2], int** game_board_array)
 	if (distance_x != 0 && distance_y == 0)
 	{
 		int direction_x = distance_x / abs(distance_x);
-		while (start_x != end_x)
+		while (start.first != end.first)
 		{
-			start_x += direction_x;
-			if (game_board_array[start_y][start_x] != -1 && start_x != end_x)
+			start.first += direction_x;
+			if (isObstructed(start, game_board_array) && start.first != end.first)
 			{
 				return false;
 			}
-			if (start_x == end_x)
+			if (start.first == end.first)
 			{
 				return true;
 			}
@@ -414,14 +415,14 @@ bool isStraightLine(Point selected_points[2], int** game_board_array)
 	if (distance_x == 0 && distance_y != 0)
 	{
 		int direction_y = distance_y / abs(distance_y);
-		while (start_y != end_y)
+		while (start.second != end.second)
 		{
-			start_y += direction_y;
-			if (game_board_array[start_y][start_x] != -1 && start_y != end_y)
+			start.second += direction_y;
+			if (isObstructed(start, game_board_array) && start.second != end.second)
 			{
 				return false;
 			}
-			if (start_y == end_y)
+			if (start.second == end.second)
 			{
 				return true;
 			}
@@ -431,22 +432,16 @@ bool isStraightLine(Point selected_points[2], int** game_board_array)
 	return false;
 }
 
-bool isLshapeLine(Point selected_points[2], int** game_board_array)
+bool isLshapeLine(Point start, Point end, int** game_board_array)
 {
-	Point start = selected_points[0];			
-	Point end = selected_points[1];
-
 	int distance_x = end.first - start.first;
 	int distance_y = end.second - start.second;
 
 	Point middle = make_pair(start.first + distance_x, start.second);
 
-	Point path_1[2] = {start, middle};
-	Point path_2[2] = {middle, end};
-
-	if (!isObstructed(game_board_array, middle))
+	if (!isObstructed(middle, game_board_array))
 	{
-		if (isStraightLine(path_1, game_board_array) && isStraightLine(path_2, game_board_array))
+		if (isStraightLine(start, middle, game_board_array) && isStraightLine(middle, end, game_board_array))
 		{
 			return true;
 		}
@@ -454,14 +449,9 @@ bool isLshapeLine(Point selected_points[2], int** game_board_array)
 
 	middle = make_pair(start.first, start.second + distance_y);
 
-	path_1[0] = start;
-	path_1[1] = middle;
-	path_2[0] = middle;
-	path_2[1] = end;
-
-	if (!isObstructed(game_board_array, middle))
+	if (!isObstructed(middle, game_board_array))
 	{
-		if (isStraightLine(path_1, game_board_array) && isStraightLine(path_2, game_board_array))
+		if (isStraightLine(start, middle, game_board_array) && isStraightLine(middle, end, game_board_array))
 		{
 			return true;
 		}
@@ -470,66 +460,159 @@ bool isLshapeLine(Point selected_points[2], int** game_board_array)
 	return false;
 }
 
-//more work
-bool isUShapeLine(Point selected_points[2], int** game_board_array, int board_length, int board_width)
+bool isUShapeLine(Point start, Point end, int** game_board_array, int board_x, int board_y)
 {
-
-	Point start = selected_points[0];
-	Point end = selected_points[1];
-
 	int distance_x = end.first - start.first;
 	int distance_y = end.second - start.second;
 
 	int middle_path_x = 0;
 	int middle_path_y = 0;
-	
-	
 
+	Point middle_1 = make_pair(middle_path_x, start.second);
+	Point middle_2 = make_pair(middle_path_x, end.second);
 
+	for (int i = 0; i < board_x; i++)
+	{
+		if (distance_x > 0)
+		{
+			if (i >= start.first && i <= end.first) continue;
+		}
+		else
+		{
+			if (i <= start.first && i >= end.first) continue;
+		}
+
+		if (isStraightLine(middle_1, middle_2, game_board_array))
+		{
+			if (isStraightLine(start, middle_1, game_board_array) && isStraightLine(middle_2, end, game_board_array) && !isObstructed(middle_1, game_board_array) && !isObstructed(middle_2, game_board_array))
+			{
+				return true;
+			}
+		}
+		else
+		{
+			middle_1.first++;
+			middle_2.first++;
+		}
+	}
+
+	middle_1 = make_pair(start.first, middle_path_y);
+	middle_2 = make_pair(end.first, middle_path_y);
+
+	for (int i = 0; i < board_y; i++)
+	{
+		if (distance_y > 0)
+		{
+			if (i >= start.second && i <= end.second) continue;
+		}
+		else
+		{
+			if (i <= start.second && i >= end.second) continue;
+		}
+
+		if (isStraightLine(middle_1, middle_2, game_board_array))
+		{
+			if (isStraightLine(start, middle_1, game_board_array) && isStraightLine(middle_2, end, game_board_array) && !isObstructed(middle_1, game_board_array) && !isObstructed(middle_2, game_board_array))
+			{
+				return true;
+			}
+		}
+		else
+		{
+			middle_1.second++;
+			middle_2.second++;
+		}
+	}
 	return false;
 }
 
 //more work
-bool isZShapeLine(Point selected_points[2], int** game_board_array)
+bool isZShapeLine(Point start, Point end, int** game_board_array, int board_x, int board_y)
 {
+	int distance_x = end.first - start.first;
+	int distance_y = end.second - start.second;
+
+	int direction_x = distance_x / abs(distance_x);
+	int direction_y = distance_y / abs(distance_y);
+
+	int middle_path_x = 0;
+	int middle_path_y = 0;
+
+	Point middle_1 = make_pair(middle_path_x, start.second);
+	Point middle_2 = make_pair(middle_path_x, end.second);
+
+	for (int i = start.first; i < end.first; i += direction_x)
+	{
+		if (isStraightLine(middle_1, middle_2, game_board_array))
+		{
+			if (isStraightLine(start, middle_1, game_board_array) && isStraightLine(middle_2, end, game_board_array) && !isObstructed(middle_1, game_board_array) && !isObstructed(middle_2, game_board_array))
+			{
+				return true;
+			}
+		}
+		else
+		{
+			middle_1.first += direction_x;
+			middle_2.first += direction_x;
+		}
+	}
+
+	middle_1 = make_pair(start.first, middle_path_y);
+	middle_2 = make_pair(end.first, middle_path_y);
+
+	for (int i = start.second; i < end.second; i += direction_y)
+	{
+		if (isStraightLine(middle_1, middle_2, game_board_array))
+		{
+			if (isStraightLine(start, middle_1, game_board_array) && isStraightLine(middle_2, end, game_board_array) && !isObstructed(middle_1, game_board_array) && !isObstructed(middle_2, game_board_array))
+			{
+				return true;
+			}
+		}
+		else
+		{
+			middle_1.second += direction_y;
+			middle_2.second += direction_y;
+		}
+	}
 	return false;
 }
 
-void clear2DArray(int** array, int length)
+void clear2DArray(int** array, int board_y)
 {
-	for (int i = 0; i < length; i++)
+	for (int i = 0; i < board_y; i++)
 	{
 		delete []array[i];
 	}
 	delete []array;
 }
 
-int** generateGameBoard(int length, int width)
+int** generateGameBoard(int board_y, int board_x)
 {
 	int** game_board_array_pointer = nullptr;
-	if ((width * length) % 2 == 1) return game_board_array_pointer;
+	if ((board_x * board_y) % 2 == 1) return game_board_array_pointer;
 	
-	game_board_array_pointer = new int* [length];
-	for (int i = 0; i < length; i++)
+	game_board_array_pointer = new int* [board_y];
+	for (int i = 0; i < board_y; i++)
 	{
-		game_board_array_pointer[i] = new int[width];
+		game_board_array_pointer[i] = new int[board_x];
 	}
 
 	//add value
-	int* cells_value = new int[width * length];
-	for (int i = 0; i < width * length; i += 2)
+	int* cells_value = new int[board_x * board_y];
+	for (int i = 0; i < board_x * board_y; i += 2)
 	{
 		int random_int = rand() % 10;
 		cells_value[i] = random_int;
 		cells_value[i + 1] = random_int;
 	}
 
-	std::shuffle(cells_value, cells_value + (width * length), std::mt19937(std::random_device()()));
+	std::shuffle(cells_value, cells_value + (board_x * board_y), std::mt19937(std::random_device()()));
 
 	int k = 0;
-	for (int i = 0; i < length; i++)
+	for (int i = 0; i < board_y; i++)
 	{
-		for (int j = 0; j < width; j++)
+		for (int j = 0; j < board_x; j++)
 		{
 			game_board_array_pointer[i][j] = cells_value[k++];
 		}
@@ -539,11 +622,11 @@ int** generateGameBoard(int length, int width)
 	return game_board_array_pointer;
 }
 
-void drawGameBoard(int** game_board_array, int length, int width)
+void drawGameBoard(int** game_board_array, int board_y, int board_x)
 {
-	for (int i = 0; i < length; i++)
+	for (int i = 0; i < board_y; i++)
 	{
-		for (int j = 0; j < width; j++)
+		for (int j = 0; j < board_x; j++)
 		{
 			setCursorPosition(8 * j + 1, 5 * i + 1);
 			cout << "+-----+";
@@ -637,49 +720,60 @@ void deselecteCell(int** game_board_array, int position_x, int position_y)
 }
 
 //find if the 2 selected cells are connectable
-void pathfinding2Cells(Point selected_points[2], int** game_board_array)
+bool pathfinding2Cells(Point selected_points[2], int** game_board_array, int board_x, int board_y)
 {
-	if (game_board_array[selected_points[0].second][selected_points[0].first] != game_board_array[selected_points[1].second][selected_points[1].first])
+	Point start = selected_points[0];
+	Point end = selected_points[1];
+
+	bool found_path = false;
+
+	if (game_board_array[start.second][start.first] != game_board_array[end.second][end.first] || start == end)
+	{
+		found_path = false;
+	}
+	else if (isStraightLine(start, end, game_board_array))
+	{
+		found_path = true;
+	}
+	else if (isLshapeLine(start, end, game_board_array))
+	{
+		found_path = true;
+	}
+	else if (isUShapeLine(start, end, game_board_array, board_x, board_y))
+	{
+		found_path = true;
+	}
+	else if (isZShapeLine(start, end, game_board_array, board_x, board_y))
+	{
+		found_path = true;
+	}
+
+	if (found_path)
+	{
+		game_board_array[start.second][start.first] = -1;
+		game_board_array[end.second][end.first] = -1;
+		selected_points[0].first = -1;
+		selected_points[0].second = -1;
+		selected_points[1].first = -1;
+		selected_points[1].second = -1;
+		return true;
+	}
+	else
 	{
 		selected_points[0].first = -1;
 		selected_points[0].second = -1;
 		selected_points[1].first = -1;
 		selected_points[1].second = -1;
-		return;
+		return false;
 	}
-
-	if (isStraightLine(selected_points, game_board_array))
-	{
-		game_board_array[selected_points[0].second][selected_points[0].first] = -1;
-		game_board_array[selected_points[1].second][selected_points[1].first] = -1;
-		selected_points[0].first = -1;
-		selected_points[0].second = -1;
-		selected_points[1].first = -1;
-		selected_points[1].second = -1;
-		return;
-	}
-
-	if (isLshapeLine(selected_points, game_board_array))
-	{
-		game_board_array[selected_points[0].second][selected_points[0].first] = -1;
-		game_board_array[selected_points[1].second][selected_points[1].first] = -1;
-		selected_points[0].first = -1;
-		selected_points[0].second = -1;
-		selected_points[1].first = -1;
-		selected_points[1].second = -1;
-		return;
-	}
-
-	selected_points[0].first = -1;
-	selected_points[0].second = -1;
-	selected_points[1].first = -1;
-	selected_points[1].second = -1;
 }
 
-void mainGameLoop(int board_length, int board_width)
+void mainGameLoop(int board_y, int board_x)
 {
-	int** game_board_array = generateGameBoard(board_length, board_width);
-	drawGameBoard(game_board_array, board_length, board_width);
+	int current_cells_on_board = board_x * board_y;
+
+	int** game_board_array = generateGameBoard(board_y, board_x);
+	drawGameBoard(game_board_array, board_y, board_x);
 
 	bool run = true;
 	int moving = false;
@@ -707,7 +801,7 @@ void mainGameLoop(int board_length, int board_width)
 			previous_position_x = current_position_x;
 			previous_position_y = current_position_y;
 			current_position_x++;
-			if (current_position_x > board_width - 1) current_position_x = 0;
+			if (current_position_x > board_x - 1) current_position_x = 0;
 			moving = true;
 		}
 		if (GetAsyncKeyState('A') & 0x8000)
@@ -715,7 +809,7 @@ void mainGameLoop(int board_length, int board_width)
 			previous_position_x = current_position_x;
 			previous_position_y = current_position_y;
 			current_position_x--;
-			if (current_position_x < 0) current_position_x = board_width - 1;
+			if (current_position_x < 0) current_position_x = board_x - 1;
 			moving = true;
 		}
 
@@ -726,7 +820,7 @@ void mainGameLoop(int board_length, int board_width)
 			previous_position_x = current_position_x;
 			previous_position_y = current_position_y;
 			current_position_y--;
-			if (current_position_y < 0) current_position_y = board_length - 1;
+			if (current_position_y < 0) current_position_y = board_y - 1;
 			moving = true;
 		}
 		if (GetAsyncKeyState('S') & 0x8000)
@@ -734,7 +828,7 @@ void mainGameLoop(int board_length, int board_width)
 			previous_position_x = current_position_x;
 			previous_position_y = current_position_y;
 			current_position_y++;
-			if (current_position_y > board_length - 1) current_position_y = 0;
+			if (current_position_y > board_y - 1) current_position_y = 0;
 			moving = true;
 		}
 
@@ -799,12 +893,18 @@ void mainGameLoop(int board_length, int board_width)
 		//if 2 cells are selected
 		if (selected_points[0].first != -1 && selected_points[1].first != -1)
 		{
-			pathfinding2Cells(selected_points, game_board_array);
+			if (pathfinding2Cells(selected_points, game_board_array, board_x, board_y)) current_cells_on_board -= 2;
 			setCursorPosition(0, 0);
-			drawGameBoard(game_board_array, board_length, board_width);
+			drawGameBoard(game_board_array, board_y, board_x);
 			drawCurrentCell(game_board_array, current_position_x, current_position_y, previous_position_x, previous_position_y, selected_points);
 		}
 
+		if (current_cells_on_board == 0) //u won yay
+		{
+			setCursorPosition(0, 50);
+			cout << "u won yay\n";
+			run = false;
+		}
 
 		//exit game
 		if (GetAsyncKeyState('F') & 0x8000)
@@ -812,9 +912,11 @@ void mainGameLoop(int board_length, int board_width)
 			setCursorPosition(0, 50);
 			run = false;
 		}
+
+
 	}
 
-	clear2DArray(game_board_array, board_length);
+	clear2DArray(game_board_array, board_y);
 }
 
 int main()
@@ -826,7 +928,7 @@ int main()
 	*/
 
 	HWND console = GetConsoleWindow();
-	MoveWindow(console, 225, 150, 800, 600, TRUE);
+	MoveWindow(console, 225, 150, 1080, 720, TRUE);
 
 	//uncomment this to load the menu
 	/*
@@ -835,17 +937,17 @@ int main()
 	*/
 
 	//uncomment this to load the gameplay
-	/*
+	
 	srand(time(0));
-	int length = 6;
-	int width = 8;
-	if (length * width % 2 != 0)
+	int board_y = 6;
+	int board_x = 8;
+	if (board_y * board_x % 2 != 0)
 	{
 		cout << "wrong dimensions" << "\n";
 		return 0;
 	}
 
-	mainGameLoop(length, width);
-	*/
+	mainGameLoop(board_y, board_x);
+	
 	return 0;
 }
