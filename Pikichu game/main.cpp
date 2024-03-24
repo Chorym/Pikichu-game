@@ -74,9 +74,11 @@ bool isPressing(int key)
 	return GetAsyncKeyState(key) & 0x8000;
 }
 
+//needs refferencing in reports
 void setCursorPosition(int x, int y)
 {
-	cout << "\x1b[" << y << ";" << x << "H";
+	COORD coord = { static_cast<SHORT>(x), static_cast<SHORT>(y) };
+	SetConsoleCursorPosition(GetStdHandle(STD_OUTPUT_HANDLE), coord);
 }
 
 //printing and updating the settings menu
