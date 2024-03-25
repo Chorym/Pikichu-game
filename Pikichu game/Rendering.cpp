@@ -167,13 +167,13 @@ void printGameplayFrame(int board_x, int board_y)
 	for (int i = 0; i < board_x * 8; i++) cout << "-";
 	cout << "[]";
 	for (int i = 0; i < board_x * 5 + 7; i++) cout << "-";
-	cout << "[]" << "\n";
+	cout << "[]";
 
 	cout << "| []";
 	for (int i = 0; i < board_x * 8 - 3; i++) cout << "-";
 	cout << "[] | []";
 	for (int i = 0; i < board_x * 5 + 3; i++) cout << "-";
-	cout << "[] |" << "\n";
+	cout << "[] |";
 
 	for (int i = 0; i < board_y * 5; i++)
 	{
@@ -181,20 +181,20 @@ void printGameplayFrame(int board_x, int board_y)
 		for (int j = 0; j < board_x * 8 - 1; j++) cout << " ";
 		cout << "| | |";
 		for (int j = 0; j < board_x * 5 + 5; j++) cout << " ";
-		cout << "| |" << "\n";
+		cout << "| |";
 	}
 
 	cout << "| []";
 	for (int i = 0; i < board_x * 8 - 3; i++) cout << "-";
 	cout << "[] | []";
 	for (int i = 0; i < board_x * 5 + 3; i++) cout << "-";
-	cout << "[] |" << "\n";
+	cout << "[] |";
 
 	cout << "[]--";
 	for (int i = 0; i < board_x * 8; i++) cout << "-";
 	cout << "[]";
 	for (int i = 0; i < board_x * 5 + 7; i++) cout << "-";
-	cout << "[]" << "\n";
+	cout << "[]";
 	
 	setCursorPosition(130, 4);
 	cout << "Controls:";
