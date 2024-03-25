@@ -31,8 +31,8 @@ void gameplayLoop(int board_x, int board_y)
 	bool key_pressed_E = false;
 	bool key_pressed_Q = false;
 
-	Point current_point = make_pair(0, 0);
-	Point previous_point = make_pair(0, 0);
+	Point current_point = make_pair(1, 1);
+	Point previous_point = make_pair(1, 1);
 
 	//used to clear points value
 	Point empty = make_pair(-1, -1);
@@ -52,7 +52,7 @@ void gameplayLoop(int board_x, int board_y)
 		{
 			previous_point = current_point;
 			current_point.first++;
-			if (current_point.first > board_x - 1) current_point.first = 0;
+			if (current_point.first > board_x - 2) current_point.first = 1;
 			moving = true;
 		}
 		if (isPressing('A') && !isPressing('W'))
@@ -60,7 +60,7 @@ void gameplayLoop(int board_x, int board_y)
 			previous_point.first = current_point.first;
 			previous_point.second = current_point.second;
 			current_point.first--;
-			if (current_point.first < 0) current_point.first = board_x - 1;
+			if (current_point.first < 1) current_point.first = board_x - 2;
 			moving = true;
 		}
 
@@ -70,14 +70,14 @@ void gameplayLoop(int board_x, int board_y)
 		{
 			previous_point = current_point;
 			current_point.second--;
-			if (current_point.second < 0) current_point.second = board_y - 1;
+			if (current_point.second < 1) current_point.second = board_y - 2;
 			moving = true;
 		}
 		if (isPressing('S') && !isPressing('A'))
 		{
 			previous_point = current_point;
 			current_point.second++;
-			if (current_point.second > board_y - 1) current_point.second = 0;
+			if (current_point.second > board_y - 2) current_point.second = 1;
 			moving = true;
 		}
 
@@ -164,7 +164,7 @@ void gameplayLoop(int board_x, int board_y)
 	clear2DArray(game_board_array, board_x);
 }
 
-void menuInteraction()
+bool menuInteraction(int &volume, bool &light_mode, int &board_x, int &board_y)
 {
 	bool run = true;
 
@@ -176,12 +176,7 @@ void menuInteraction()
 	int main_menu_option_amount = 4;
 	int settings_menu_option_amount = 1;
 
-	int volume = 10; //1 to 10, step = 1
-	bool light_mode = false;
-
 	int difficulty = 2; //1 is easy, 2 is normal, 3 is hard
-	int time = 2; //same as dif
-	int size = 2; //same as dif
 
 	bool change_volume = false;
 	bool change_lighting = false;
@@ -189,7 +184,7 @@ void menuInteraction()
 	while (run)
 	{
 		//Changing options in main menu or settings
-		if (GetAsyncKeyState('W') && 0x8000)
+		if (isPressing('W'))
 		{
 			previous_option = current_option;
 			current_option--;
@@ -197,13 +192,16 @@ void menuInteraction()
 			{
 				current_option = main_menu_option_amount;
 			}
-			if (current_menu == 0)
-				printMainMenu(current_option, previous_option, true);
-			else if (current_menu == 1)
-				printSettingsMenu(current_option, previous_option, volume, light_mode, true);
+			switch (current_menu)
+			{
+			case 0:
+				printMainMenu(current_option, previous_option, true); break;
+			case 1:
+				printSettingsMenu(current_option, previous_option, volume, light_mode, true, false); break;
+			}
 			Sleep(200);
 		}
-		if (GetAsyncKeyState('S') && 0x8000)
+		else if (isPressing('S'))
 		{
 			previous_option = current_option;
 			current_option++;
@@ -216,105 +214,129 @@ void menuInteraction()
 			case 0:
 				printMainMenu(current_option, previous_option, true); break;
 			case 1:
-				printSettingsMenu(current_option, previous_option, volume, light_mode, true); break;
-			case 2:
-				printGameplayPresetScreen(current_option, previous_option, difficulty, time, size, true); break;
+				printSettingsMenu(current_option, previous_option, volume, light_mode, true, false); break;
 			}
 			Sleep(200);
 		}
 
 		//Changing settings in settings and game menu
-		if (GetAsyncKeyState('A') && 0x8000 && current_menu == 1)
+		if (isPressing('A') && !isPressing('W') && !isPressing('S'))
 		{
-			if (current_option == 1)
+			if (current_menu == 1 && current_option == 1)
 			{
 				volume--;
 				if (volume < 1) volume = 10;
-				printSettingsMenu(current_option, previous_option, volume, light_mode, true);
+				printSettingsMenu(current_option, previous_option, volume, light_mode, true, false);
 				PlaySound(L"C:\\Users\\PC\\source\\repos\\Pikichu game\\SFX\\break.wav", NULL, SND_FILENAME | SND_ASYNC);
-				Sleep(200);
 			}
-			if (current_option == 2)
+			if (current_menu == 2)
 			{
-				if (light_mode == true)
+				difficulty--;
+				if (difficulty < 1)
 				{
-					light_mode = false;
-					cout << "\x1b[0m";
-					printSettingsMenu(current_option, previous_option, volume, light_mode, false);
-					printSettingsMenu(current_option, previous_option, volume, light_mode, true);
+					difficulty = 3;
 				}
-				else
-				{
-					light_mode = true;
-					cout << "\x1b[30m";
-					cout << "\x1b[47m";
-					printSettingsMenu(current_option, previous_option, volume, light_mode, false);
-					printSettingsMenu(current_option, previous_option, volume, light_mode, true);
-				}
-				Sleep(200);
+				printGameplayPresetScreen(difficulty, true);
 			}
+			Sleep(200);
 		}
-		if (GetAsyncKeyState('D') && 0x8000 && current_menu == 1)
+		else if (isPressing('D') && !isPressing('W') && !isPressing('S'))
 		{
-			if (current_option == 1)
+			if (current_menu == 1 && current_option == 1)
 			{
 				volume++;
 				if (volume > 10) volume = 1;
-				printSettingsMenu(current_option, previous_option, volume, light_mode, true);
-				Sleep(200);
+				printSettingsMenu(current_option, previous_option, volume, light_mode, true, false);
+				PlaySound(L"C:\\Users\\PC\\source\\repos\\Pikichu game\\SFX\\break.wav", NULL, SND_FILENAME | SND_ASYNC);
 			}
-			if (current_option == 2)
+			if (current_menu == 2)
 			{
-				if (light_mode == true)
+				difficulty++;
+				if (difficulty > 3)
 				{
-					light_mode = false;
-					cout << "\x1b[0m";
-					printSettingsMenu(current_option, previous_option, volume, light_mode, false);
-					printSettingsMenu(current_option, previous_option, volume, light_mode, true);
+					difficulty = 1;
 				}
-				else
-				{
-					light_mode = true;
-					cout << "\x1b[30m";
-					cout << "\x1b[47m";
-					printSettingsMenu(current_option, previous_option, volume, light_mode, false);
-					printSettingsMenu(current_option, previous_option, volume, light_mode, true);
-				}
-				Sleep(200);
+				printGameplayPresetScreen(difficulty, true);
 			}
+			Sleep(200);
 		}
 
 		//confirm current option
-		if (GetAsyncKeyState('E') && 0x8000)
+		if (isPressing('E'))
 		{
-			//from main to settings
-			if (current_menu == 0 && current_option == 3)
+			//main menu
+			if (current_menu == 0)
 			{
-				current_menu = 1;
-				current_option = 1;
-				previous_option = 1;
-				printSettingsMenu(current_option, previous_option, volume, light_mode, false); //this to switch to the menu
-				printSettingsMenu(current_option, previous_option, volume, light_mode, true); //this to change the settings correctly
-				//move the select cursor back
-				setCursorPosition(15, 2 * current_option + 3);
-				cout << ">>>>";
+				//from main to settings
+				if (current_option == 1)
+				{
+					current_menu = 2;
+					current_option = 1;
+					previous_option = 1;
+					printGameplayPresetScreen(difficulty, false);
+				}
+				if (current_option == 3)
+				{
+					current_menu = 1;
+					current_option = 1;
+					previous_option = 1;
+					printSettingsMenu(current_option, previous_option, volume, light_mode, true, true); 
+					setCursorPosition(14, 2 * current_option + 2);
+					cout << ">>>>";
+				}
+				if (current_option == 4)
+				{
+					setCursorPosition(0, 16);
+					run = false;
+					return false;
+				}
 			}
-			//from settings to main
-			if (current_menu == 1 && current_option == 4)
+			//settings menu
+			else if (current_menu == 1)
 			{
-				current_menu = 0;
-				current_option = 1;
-				previous_option = 1;
-				printMainMenu(0, 0, false);
-			}
-			//quit game
-			if (current_menu == 0 && current_option == 4)
-			{
-				setCursorPosition(0, 16);
-				run = false;
-				return;
+				if (current_option == 2)
+				{
+					light_mode = !light_mode;
+					if (light_mode)
+					{
+						cout << "\x1b[30m";
+						cout << "\x1b[47m";
+					}
+					else
+					{
+						cout << "\x1b[0m";
+					}
+					printSettingsMenu(current_option, previous_option, volume, light_mode, true, true);
+				}
 			}
 			Sleep(200);
+		}
+
+		//return to previous menu
+		if ((isPressing('R') && current_menu == 1) || (isPressing('R') && current_menu == 2))
+		{
+			current_menu = 0;
+			current_option = 1;
+			previous_option = 1;
+			printMainMenu(0, 0, false);
+		}
+
+		//start game
+		if (isPressing('F') && current_menu == 2)
+		{
+			switch (difficulty)
+			{
+			case 1:
+				board_x = 8;
+				board_y = 6;
+			case 2:
+				board_x = 10;
+				board_y = 8;
+			case 3:
+				board_x = 12;
+				board_y = 10;
+			}
+			return true;
 		}
 	}
 }

@@ -2,4 +2,4 @@
 
 bool isPressing(int key);
 void gameplayLoop(int board_x, int board_y);
-void menuInteraction();
+bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y);

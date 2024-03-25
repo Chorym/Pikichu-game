@@ -45,36 +45,58 @@ one word, captital first letter
 //redecorate everything
 //fix the printing and x / y order of functions
 
+void resizeConsole(int width, int height, int bufferWidth, int bufferHeight) {
+	HWND consoleWindow = GetConsoleWindow();
+	RECT rect;
+	GetWindowRect(consoleWindow, &rect);
+
+	// Calculate new window size
+	rect.right = rect.left + width;
+	rect.bottom = rect.top + height;
+
+	// Resize the console window
+	MoveWindow(consoleWindow, rect.left, rect.top, width, height, TRUE);
+
+	// Resize the console screen buffer
+	HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	COORD bufferSize = { bufferWidth, bufferHeight };
+	SetConsoleScreenBufferSize(consoleHandle, bufferSize);
+}
+
 int main()
 {
-	/*
-	debug
-	std::fstream fin;
-	fin.open("debug.txt");
-	*/
-
-	HWND console = GetConsoleWindow();
-	MoveWindow(console, 225, 150, 1401, 903, TRUE);
-
-	//uncomment this to load the menu
-	/*
-	printMainMenu(0, 0, false);
-	menuInteraction();
-	*/
-
-	//uncomment this to load the gameplay
-	
 	srand(time(0));
+
+	bool run = true;
+
+	int volume = 10;
+	bool light_mode = false;
+
 	//-2 for the actual size, as 2 is reserved for the rim
-	int board_x = 12;
-	int board_y = 10;
-	if (board_x * board_y % 2 != 0)
+	int board_x = 10;
+	int board_y = 8;
+
+	resizeConsole(905, 400, 200, 200);
+	printMainMenu(0, 0, false);
+	while (run)
 	{
-		cout << "wrong dimensions" << "\n";
-		return 0;
+		if (menuInteraction(volume, light_mode, board_x, board_y) == true)
+		{
+			//start game
+			resizeConsole(1401, 930, 200, 200);
+			gameplayLoop(board_x, board_y);
+
+			//print the menu again after a game is done
+			resizeConsole(905, 400, 200, 200);
+			printMainMenu(0, 0, false);
+		}
+		else
+		{
+			//quit game
+			run = false;
+		}
 	}
 
-	gameplayLoop(board_x, board_y);
-	setCursorPosition(0, 54);
+	//setCursorPosition(0, 54);
 	return 0;
 }
