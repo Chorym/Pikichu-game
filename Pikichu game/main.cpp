@@ -45,24 +45,6 @@ one word, captital first letter
 //redecorate everything
 //fix the printing and x / y order of functions
 
-void resizeConsole(int width, int height, int bufferWidth, int bufferHeight) {
-	HWND consoleWindow = GetConsoleWindow();
-	RECT rect;
-	GetWindowRect(consoleWindow, &rect);
-
-	// Calculate new window size
-	rect.right = rect.left + width;
-	rect.bottom = rect.top + height;
-
-	// Resize the console window
-	MoveWindow(consoleWindow, rect.left, rect.top, width, height, TRUE);
-
-	// Resize the console screen buffer
-	HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
-	COORD bufferSize = { bufferWidth, bufferHeight };
-	SetConsoleScreenBufferSize(consoleHandle, bufferSize);
-}
-
 int main()
 {
 	srand(time(0));
@@ -73,8 +55,8 @@ int main()
 	bool light_mode = false;
 
 	//-2 for the actual size, as 2 is reserved for the rim
-	int board_x = 10;
-	int board_y = 8;
+	int board_x;
+	int board_y;
 
 	resizeConsole(905, 400, 200, 200);
 	printMainMenu(0, 0, false);

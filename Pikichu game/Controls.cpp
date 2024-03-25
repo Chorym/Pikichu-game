@@ -164,7 +164,7 @@ void gameplayLoop(int board_x, int board_y)
 	clear2DArray(game_board_array, board_x);
 }
 
-bool menuInteraction(int &volume, bool &light_mode, int &board_x, int &board_y)
+bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y)
 {
 	bool run = true;
 
@@ -329,13 +329,17 @@ bool menuInteraction(int &volume, bool &light_mode, int &board_x, int &board_y)
 			case 1:
 				board_x = 8;
 				board_y = 6;
+				break;
 			case 2:
 				board_x = 10;
 				board_y = 8;
+				break;
 			case 3:
 				board_x = 12;
 				board_y = 10;
+				break;
 			}
+			Sleep(200);
 			return true;
 		}
 	}

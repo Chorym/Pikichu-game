@@ -7,7 +7,27 @@ using std::cout;
 
 typedef std::pair<int, int> Point;
 
-//needs refferencing in reports
+//needs referencing
+void resizeConsole(int width, int height, short bufferWidth, short bufferHeight)
+{
+	HWND consoleWindow = GetConsoleWindow();
+	RECT rect;
+	GetWindowRect(consoleWindow, &rect);
+
+	// Calculate new window size
+	rect.right = rect.left + width;
+	rect.bottom = rect.top + height;
+
+	// Resize the console window
+	MoveWindow(consoleWindow, rect.left, rect.top, width, height, TRUE);
+
+	// Resize the console screen buffer
+	HANDLE consoleHandle = GetStdHandle(STD_OUTPUT_HANDLE);
+	COORD bufferSize = { bufferWidth, bufferHeight };
+	SetConsoleScreenBufferSize(consoleHandle, bufferSize);
+}
+
+//needs refferencing 
 void setCursorPosition(int x, int y)
 {
 	COORD coord = { static_cast<SHORT>(x), static_cast<SHORT>(y) };

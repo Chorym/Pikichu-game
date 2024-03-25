@@ -6,6 +6,7 @@ typedef std::pair<int, int> Point;
 void setCursorPosition(int x, int y);
 
 //menu
+void resizeConsole(int width, int height, short bufferWidth, short bufferHeight);
 void printSettingsMenu(int current_option, int previous_option, int volume, bool light_mode, bool change_option, bool render);
 void printMainMenu(int current_option, int previous_option, bool change_option);
 void printGameplayPresetScreen(int difficulty, bool change_option);
