@@ -17,20 +17,37 @@ bool isPressing(int key)
 	return GetAsyncKeyState(key) & 0x8000;
 }
 
-void gameplayLoop(int board_x, int board_y)
+void gameplayLoop(int board_x, int board_y, int difficulty)
 {
-	printGameplayFrame(board_x, board_y);
-	int current_cells_on_board = board_x * board_y;
+	//calculate timer
+	int max_time = (9 - (2 * difficulty)) * 60;
+	int start_game_time = currentSystemTime();
+	int current_system_time = currentSystemTime();
+	int previous_second = currentSystemTime();
 
+	//
+	printGameplayFrame(board_x, board_y);
+	int current_cells_on_board = (board_x - 2) * (board_y - 2);
+
+	//
 	int** game_board_array = generateGameBoard(board_x, board_y);
 	drawGameBoard(game_board_array, board_x, board_y);
 
+	//some info about the current board state
+	setCursorPosition(board_x * 11 + 7, 11);
+	cout << max_time << "s   ";
+	setCursorPosition(board_x * 11, 12);
+	cout << "Remaining cells: " << current_cells_on_board;
+
+	//
 	bool run = true;
 	int moving = false;
 
+	//make sure these keys can only be pressed once until released again
 	bool key_pressed_E = false;
 	bool key_pressed_Q = false;
 
+	//used to mark current cell
 	Point current_point = make_pair(1, 1);
 	Point previous_point = make_pair(1, 1);
 
@@ -42,11 +59,28 @@ void gameplayLoop(int board_x, int board_y)
 	Point point_2 = make_pair(-1, -1);
 	Point selected_points[] = { point_1, point_2 };
 
+	//
 	drawCurrentCell(game_board_array, current_point, previous_point, selected_points);
 
-	//run = false;
+	//run = false; debug
 	while (run)
 	{
+		//update timer
+		current_system_time = currentSystemTime();
+		if (current_system_time - previous_second >= 1)
+		{
+			previous_second = current_system_time;
+			setCursorPosition(board_x * 11 + 7, 11);
+			cout << max_time - (current_system_time - start_game_time) << "s   ";
+			setCursorPosition(0, 0);
+		}
+		if (current_system_time - start_game_time >= max_time)
+		{
+			setCursorPosition(board_x * 11 + 7, 11);
+			cout << "lmao skill issue";
+			return;
+		}
+
 		//move horizontally
 		if (isPressing('D') && !isPressing('W') && !isPressing('S'))
 		{
@@ -132,7 +166,12 @@ void gameplayLoop(int board_x, int board_y)
 		//if 2 cells are selected
 		if (selected_points[0] != empty && selected_points[1] != empty)
 		{
-			if (pathfinding2Cells(selected_points, game_board_array, board_x, board_y)) current_cells_on_board -= 2;
+			if (pathfinding2Cells(selected_points, game_board_array, board_x, board_y)) 
+			{ 
+				current_cells_on_board -= 2;
+				setCursorPosition(board_x * 11 + 17, 12);
+				cout << current_cells_on_board << "  ";
+			}
 			drawGameBoard(game_board_array, board_x, board_y);
 			drawCurrentCell(game_board_array, current_point, previous_point, selected_points);
 		}
@@ -164,7 +203,7 @@ void gameplayLoop(int board_x, int board_y)
 	clear2DArray(game_board_array, board_x);
 }
 
-bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y)
+bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, int& difficulty)
 {
 	bool run = true;
 
@@ -176,7 +215,7 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y)
 	int main_menu_option_amount = 4;
 	int settings_menu_option_amount = 1;
 
-	int difficulty = 2; //1 is easy, 2 is normal, 3 is hard
+	difficulty = 2;
 
 	bool change_volume = false;
 	bool change_lighting = false;
@@ -327,14 +366,17 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y)
 			switch (difficulty)
 			{
 			case 1:
+				//easy
 				board_x = 8;
 				board_y = 6;
 				break;
 			case 2:
+				//normal
 				board_x = 10;
 				board_y = 8;
 				break;
 			case 3:
+				//hard
 				board_x = 12;
 				board_y = 10;
 				break;

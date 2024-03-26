@@ -57,16 +57,19 @@ int main()
 	//-2 for the actual size, as 2 is reserved for the rim
 	int board_x;
 	int board_y;
+	int difficulty = 0;
 
 	resizeConsole(905, 400, 200, 200);
 	printMainMenu(0, 0, false);
 	while (run)
 	{
-		if (menuInteraction(volume, light_mode, board_x, board_y) == true)
+		if (menuInteraction(volume, light_mode, board_x, board_y, difficulty) == true)
 		{
 			//start game
-			resizeConsole(1401, 930, 200, 200);
-			gameplayLoop(board_x, board_y);
+			if (board_x == 12) resizeConsole(1401, 930, 200, 200);
+			else if (board_x == 10) resizeConsole(1201, 780, 200, 200);
+			else if (board_x == 8) resizeConsole(1001, 630, 200, 200);
+			gameplayLoop(board_x, board_y, difficulty);
 
 			//print the menu again after a game is done
 			resizeConsole(905, 400, 200, 200);

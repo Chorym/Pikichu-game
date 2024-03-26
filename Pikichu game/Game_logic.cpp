@@ -1,5 +1,7 @@
 #include <iostream>
 #include <utility>
+#include <chrono>
+#include <ctime>
 #include "Rendering.h"
 #include "Game_logic.h"
 
@@ -7,6 +9,17 @@ using std::make_pair;
 using std::cout;
 
 typedef std::pair<int, int> Point;
+
+#include <iostream>
+#include <chrono>
+
+int currentSystemTime()
+{
+	auto now = std::chrono::system_clock::now();
+	std::chrono::seconds seconds_since_epoch = std::chrono::duration_cast<std::chrono::seconds>(now.time_since_epoch());
+	int current_time_seconds = seconds_since_epoch.count();
+	return current_time_seconds;
+}
 
 bool pathfinding2Cells(Point selected_points[2], int** game_board_array, int board_x, int board_y)
 {

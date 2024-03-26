@@ -199,6 +199,7 @@ void printGameplayPresetScreen(int difficulty, bool change_option)
 	cout << "|-----|-----------------------------------------------------------------------------------------------|-----|" << "\n"; //14
 }
 
+//gameplay screen decor
 void printGameplayFrame(int board_x, int board_y)
 {
 	system("cls");
@@ -238,19 +239,24 @@ void printGameplayFrame(int board_x, int board_y)
 	cout << "[]" << "\n";
 	
 	//rendering the text on the right of the board
-	setCursorPosition(130, 4);
+	setCursorPosition(board_x * 11, 4);
 	cout << "Controls:";
-	setCursorPosition(110, 6);
+	setCursorPosition(board_x * 11 - 7, 6);
 	cout << "Up:    W   |   Select:   E";
-	setCursorPosition(110, 7);
+	setCursorPosition(board_x * 11 - 7, 7);
 	cout << "Left:  A   |   Deselect: Q";
-	setCursorPosition(110, 8);
+	setCursorPosition(board_x * 11 - 7, 8);
 	cout << "Down:  S   |";
-	setCursorPosition(110, 9);
-	cout << "Right: D   |";
+	setCursorPosition(board_x * 11 - 7, 9);
+	cout << "Right: D   |   End game: F";
 
-	setCursorPosition(110, 11);
-	cout << "End game: F";
+	setCursorPosition(board_x * 11, 11);
+	cout << "Time: ";
+
+	setCursorPosition(board_x * 8 + 6, 14);
+	cout << "[]";
+	for (int i = 0; i < board_x * 5 + 3; i++) cout << "-";
+	cout << "[]" << "\n";
 }
 
 //
