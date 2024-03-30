@@ -21,11 +21,16 @@ int currentSystemTime()
 	return current_time_seconds;
 }
 
-bool pathfinding2Cells(Point selected_points[2], int** game_board_array, int board_x, int board_y)
+bool pathfinding2Cells(Point selected_points[2], Point mid_points[2], int** game_board_array, int board_x, int board_y)
 {
 	Point start = selected_points[0];
 	Point end = selected_points[1];
 	Point empty = make_pair(-1, -1);
+
+	int path_type;
+
+	Point middle_1 = empty;
+	Point middle_2 = empty;
 
 	bool found_path = false;
 
@@ -36,32 +41,34 @@ bool pathfinding2Cells(Point selected_points[2], int** game_board_array, int boa
 	else if (isClearedLine(start, end, game_board_array))
 	{
 		found_path = true;
+		path_type = 0;
 	}
-	else if (isLshapeLine(start, end, game_board_array))
+	else if (isLshapeLine(start, end, game_board_array, middle_1))
 	{
 		found_path = true;
+		path_type = 1;
 	}
-	else if (isUShapeLine(start, end, game_board_array, board_x, board_y))
+	else if (isUShapeLine(start, end, game_board_array, board_x, board_y, middle_1, middle_2))
 	{
 		found_path = true;
+		path_type = 2;
 	}
-	else if (isZShapeLine(start, end, game_board_array, board_x, board_y))
+	else if (isZShapeLine(start, end, game_board_array, board_x, board_y, middle_1, middle_2))
 	{
 		found_path = true;
+		path_type = 3;
 	}
 
 	if (found_path)
 	{
 		game_board_array[start.first][start.second] = -1;
 		game_board_array[end.first][end.second] = -1;
-		selected_points[0] = empty;
-		selected_points[1] = empty;
+		mid_points[0] = middle_1;
+		mid_points[1] = middle_2;
 		return true;
 	}
 	else
 	{
-		selected_points[0] = empty;
-		selected_points[1] = empty;
 		return false;
 	}
 }
@@ -122,12 +129,12 @@ bool isClearedLine(Point start, Point end, int** game_board_array)
 	return false;
 }
 
-bool isLshapeLine(Point start, Point end, int** game_board_array)
+bool isLshapeLine(Point start, Point end, int** game_board_array, Point &middle)
 {
 	int distance_x = end.first - start.first;
 	int distance_y = end.second - start.second;
 
-	Point middle = make_pair(start.first + distance_x, start.second);
+	middle = make_pair(start.first + distance_x, start.second);
 
 	if (!isObstructed(middle, game_board_array))
 	{
@@ -150,7 +157,7 @@ bool isLshapeLine(Point start, Point end, int** game_board_array)
 	return false;
 }
 
-bool isUShapeLine(Point start, Point end, int** game_board_array, int board_x, int board_y)
+bool isUShapeLine(Point start, Point end, int** game_board_array, int board_x, int board_y, Point& middle_1, Point& middle_2)
 {
 	int distance_x = end.first - start.first;
 	int distance_y = end.second - start.second;
@@ -158,8 +165,8 @@ bool isUShapeLine(Point start, Point end, int** game_board_array, int board_x, i
 	int middle_path_x = 0;
 	int middle_path_y = 0;
 
-	Point middle_1 = make_pair(middle_path_x, start.second);
-	Point middle_2 = make_pair(middle_path_x, end.second);
+	middle_1 = make_pair(middle_path_x, start.second);
+	middle_2 = make_pair(middle_path_x, end.second);
 
 	for (int i = 0; i < board_x; i++)
 	{
@@ -234,7 +241,7 @@ bool isUShapeLine(Point start, Point end, int** game_board_array, int board_x, i
 	return false;
 }
 
-bool isZShapeLine(Point start, Point end, int** game_board_array, int board_x, int board_y)
+bool isZShapeLine(Point start, Point end, int** game_board_array, int board_x, int board_y, Point& middle_1, Point& middle_2)
 {
 	int distance_x = end.first - start.first;
 	int distance_y = end.second - start.second;
@@ -246,8 +253,8 @@ bool isZShapeLine(Point start, Point end, int** game_board_array, int board_x, i
 	int middle_path_y = 0;
 
 	middle_path_x = start.first;
-	Point middle_1 = make_pair(middle_path_x, start.second);
-	Point middle_2 = make_pair(middle_path_x, end.second);
+	middle_1 = make_pair(middle_path_x, start.second);
+	middle_2 = make_pair(middle_path_x, end.second);
 
 	//horizontal pathing
 	if (direction_x > 0)

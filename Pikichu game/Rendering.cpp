@@ -2,6 +2,7 @@
 #include <Windows.h>
 #include <random>
 #include <utility>
+#include <math.h>
 
 using std::cout;
 
@@ -262,6 +263,68 @@ void printGameplayFrame(int board_x, int board_y)
 //
 //gameplay related rendering
 //
+
+//draw a dotted line connecting 2 cells on the board
+void drawConnection(Point start, Point end)
+{
+	int distance_x = end.first - start.first;
+	int distance_y = end.second - start.second;
+
+	int direction;
+
+	if (distance_x != 0)
+	{
+		direction = distance_x / abs(distance_x);
+		if (direction > 0)
+		{
+			setCursorPosition(8 * start.first + 6, 5 * start.second + 4);
+			cout << "O";
+			for (int i = 0; i < abs(distance_x * 8 - 1); i++)
+			{
+				cout << "-";
+			}
+			cout << "O";
+		}
+		else
+		{
+			setCursorPosition(8 * end.first + 6, 5 * end.second + 4);
+			cout << "O";
+			for (int i = 0; i < abs(distance_x * 8 - 1); i++)
+			{
+				cout << "-";
+			}
+			cout << "O";
+		}
+	}
+	else
+	{
+		direction = distance_y / abs(distance_y);
+		if (direction > 0)
+		{
+			setCursorPosition(8 * start.first + 5, 5 * start.second + 1);
+			cout << "O";
+			for (int i = 0; i < abs(5 * distance_y + 1); i++)
+			{
+				setCursorPosition(8 * start.first + 5, 5 * start.second + 1 + i);
+				cout << "|";
+			}
+			setCursorPosition(8 * end.first + 5, 5 * end.second + 3);
+			cout << "O";
+		}
+		else
+		{
+			setCursorPosition(8 * end.first + 5, 5 * end.second + 1);
+			cout << "O";
+			for (int i = 0; i < abs(5 * distance_y + 1); i++)
+			{
+				setCursorPosition(8 * end.first + 5, 5 * end.second + 1 + i);
+				cout << "|";
+			}
+			setCursorPosition(8 * start.first + 5, 5 * start.second + 3);
+			cout << "O";
+		}
+	}
+}
 
 void clear2DArray(int** array, int board_x)
 {

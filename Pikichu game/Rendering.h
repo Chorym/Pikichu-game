@@ -13,6 +13,7 @@ void printGameplayPresetScreen(int difficulty, bool change_option);
 void printGameplayFrame(int board_x, int board_y);
 
 //gameplay
+void drawConnection(Point start, Point end);
 void clear2DArray(int** array, int board_x);
 int** generateGameBoard(int board_x, int board_y);
 void drawGameBoard(int** game_board_array, int board_x, int board_y);

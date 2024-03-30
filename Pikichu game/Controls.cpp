@@ -55,9 +55,13 @@ void gameplayLoop(int board_x, int board_y, int difficulty)
 	Point empty = make_pair(-1, -1);
 
 	//selected_points array hold the 2 points that the player chose to connect
-	Point point_1 = make_pair(-1, -1);
-	Point point_2 = make_pair(-1, -1);
+	Point point_1 = empty;
+	Point point_2 = empty;
 	Point selected_points[] = { point_1, point_2 };
+
+	Point middle_1 = empty;
+	Point middle_2 = empty;
+	Point mid_points[2] = { middle_1, middle_2 };
 
 	//
 	drawCurrentCell(game_board_array, current_point, previous_point, selected_points);
@@ -166,14 +170,39 @@ void gameplayLoop(int board_x, int board_y, int difficulty)
 		//if 2 cells are selected
 		if (selected_points[0] != empty && selected_points[1] != empty)
 		{
-			if (pathfinding2Cells(selected_points, game_board_array, board_x, board_y)) 
-			{ 
+			if (pathfinding2Cells(selected_points, mid_points, game_board_array, board_x, board_y))
+			{
 				current_cells_on_board -= 2;
 				setCursorPosition(board_x * 11 + 17, 12);
 				cout << current_cells_on_board << "  ";
+				drawGameBoard(game_board_array, board_x, board_y);
+				drawCurrentCell(game_board_array, current_point, previous_point, selected_points);
+
+				if (mid_points[0] == empty)
+				{
+					drawConnection(selected_points[0], selected_points[1]);
+				}
+				else if (mid_points[1] == empty)
+				{
+					drawConnection(selected_points[0], mid_points[0]);
+					drawConnection(mid_points[0], selected_points[1]);
+				}
+				else
+				{
+					drawConnection(selected_points[0], mid_points[0]);
+					drawConnection(mid_points[0], mid_points[1]);
+					drawConnection(mid_points[1], selected_points[1]);
+				}
 			}
-			drawGameBoard(game_board_array, board_x, board_y);
-			drawCurrentCell(game_board_array, current_point, previous_point, selected_points);
+			else
+			{
+				drawGameBoard(game_board_array, board_x, board_y);
+				drawCurrentCell(game_board_array, current_point, previous_point, selected_points);
+			}
+			selected_points[0] = empty;
+			selected_points[1] = empty;
+			mid_points[0] = empty;
+			mid_points[1] = empty;
 		}
 
 		if (current_cells_on_board == 0) //u won yay
