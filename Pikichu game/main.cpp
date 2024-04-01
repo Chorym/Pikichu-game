@@ -71,11 +71,11 @@ int main()
 
 	resizeConsole(905, 600, 200, 200);
 
-	printLoginScreen(player_data, current_player);
-	printMainMenu(0, 0, false, current_player);
+	bool returning = printLoginScreen(player_data, current_player);
+	printMainMenu(0, 0, false, current_player, returning);
 	while (run)
 	{
-		if (menuInteraction(volume, light_mode, board_x, board_y, difficulty, load_game, current_player) == true)
+		if (menuInteraction(volume, light_mode, board_x, board_y, difficulty, load_game, current_player, player_data, returning) == true)
 		{
 			//start game
 			if (board_x == 12) resizeConsole(1401, 930, 200, 200);
@@ -85,7 +85,7 @@ int main()
 
 			//print the menu again after a game is done
 			resizeConsole(905, 600, 200, 200);
-			printMainMenu(0, 0, false, current_player);
+			printMainMenu(0, 0, false, current_player, returning);
 		}
 		else
 		{
@@ -100,5 +100,6 @@ int main()
 	clear2DArray(game_board_array, board_x);
 	delete[]player_data;
 
+	setCursorPosition(0, 20);
 	return 0;
 }

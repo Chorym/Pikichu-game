@@ -269,23 +269,14 @@ void gameplayLoop(int board_x, int board_y, int difficulty, int** &game_board_ar
 
 			run = false;
 		}
-
-		//only for debugging, will be removed in the final ship
-		if (isPressing('R'))
-		{
-			Point debug_point = current_point;
-			clearCell(debug_point, game_board_array);
-			drawGameBoard(game_board_array, board_x, board_y);
-			drawCurrentCell(game_board_array, current_point, previous_point, selected_points);
-		}
 	}
 }
 
-bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, int& difficulty, bool &load_game, PlayerData &current_player)
+bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, int& difficulty, bool &load_game, PlayerData &current_player, PlayerData player_data[], bool returning)
 {
 	bool run = true;
 
-	int current_menu = 0; //0 is main menu, 1 is settings menu
+	int current_menu = 0; //0 is main menu, 1 is settings menu, 2 is pre game stuff, 3 is leaderboards
 
 	int current_option = 1;
 	int previous_option = 1;
@@ -312,7 +303,7 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 			switch (current_menu)
 			{
 			case 0:
-				printMainMenu(current_option, previous_option, true, current_player); break;
+				printMainMenu(current_option, previous_option, true, current_player, returning); break;
 			case 1:
 				printSettingsMenu(current_option, previous_option, volume, light_mode, true, false); break;
 			}
@@ -329,7 +320,7 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 			switch (current_menu)
 			{
 			case 0:
-				printMainMenu(current_option, previous_option, true, current_player); break;
+				printMainMenu(current_option, previous_option, true, current_player, returning); break;
 			case 1:
 				printSettingsMenu(current_option, previous_option, volume, light_mode, true, false); break;
 			}
@@ -411,7 +402,10 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 				}
 				if (current_option == 3)
 				{
-					//leaderboard
+					current_menu = 3;
+					current_option = 1;
+					previous_option = 1;
+					printLeaderboardScreen(player_data, difficulty);
 				}
 				if (current_option == 4)
 				{
@@ -450,7 +444,7 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 			current_menu = 0;
 			current_option = 1;
 			previous_option = 1;
-			printMainMenu(0, 0, false, current_player);
+			printMainMenu(0, 0, false, current_player, returning);
 		}
 
 		//start game
@@ -477,6 +471,28 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 			Sleep(200);
 			load_game = false;
 			return true;
+		}
+
+		//changing leaderboards sorting
+		if (current_menu == 3)
+		{
+			int difficulty_sorting = 1;
+
+			if (isPressing('1'))
+			{
+				int difficulty_sorting = 1;
+				printLeaderboardScreen(player_data, difficulty_sorting);
+			}
+			else if (isPressing('2'))
+			{
+				int difficulty_sorting = 2;
+				printLeaderboardScreen(player_data, difficulty_sorting);
+			}
+			else if (isPressing('3'))
+			{
+				int difficulty_sorting = 3;
+				printLeaderboardScreen(player_data, difficulty_sorting);
+			}
 		}
 
 		if (isPressing(VK_ESCAPE) && current_menu == 0)

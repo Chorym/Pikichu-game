@@ -1,28 +1,10 @@
 #include <fstream>
 #include <iostream>
 #include <string>
+#include "Player_data_manip.h"
+#include "Rendering.h"
 
 using std::string;
-
-struct PlayerData
-{
-	string name = "";
-
-    //saves the best time of each difficulty
-    int record_time[3] = { -1, -1, -1 };
-
-    //
-    int previous_game = 0;
-    int board_x = -1;
-    int board_y = -1;
-
-    //
-    int previous_game_time = -1;
-    int previous_game_cell_amount = -1;
-
-    //used to load a board or to pass value to previous_game_board_state[12][12] to save values
-    int** previous_board_pointer = nullptr;
-};
 
 bool writingPlayerData(string file_name, PlayerData player_data[])
 {
@@ -30,45 +12,23 @@ bool writingPlayerData(string file_name, PlayerData player_data[])
 
     if (!file_writing)
     {
+        system("cls");
         std::cout << "Can't open file / File missing!" << "\n";
         system("pause");
         return false;
     }
-
+    
     int i = 0;
-    while (player_data[i].name == "")
+    while (player_data[i].name != "")
     {
         //write name
-        size_t string_length = player_data[i].name.size();
-        file_writing.write(reinterpret_cast<const char*>(&string_length), sizeof(string_length));
-        file_writing.write(player_data[i].name.c_str(), string_length);
+        file_writing.write(player_data[i].name.c_str(), player_data[i].name.size() + 1);
 
         //write record time
-        for (int j = 0; j < 3; ++j)
+        for (int j = 0; j < 3; j++)
         {
-            file_writing.write(reinterpret_cast<const char*>(&player_data[i].record_time[j]), sizeof(player_data[i].record_time[j]));
+            file_writing.write(reinterpret_cast<char*>(&player_data[i].record_time[j]), sizeof(int));
         }
-
-        //write previous game 
-        file_writing.write(reinterpret_cast<const char*>(&player_data[i].previous_game), sizeof(player_data[i].previous_game));
-        if (player_data[i].previous_game == false)
-        {
-            continue; //theres nothing to save, continue onto the next player data set
-        }
-
-        //write board x and board y
-        file_writing.write(reinterpret_cast<const char*>(&player_data[i].board_x), sizeof(player_data[i].board_x));
-        file_writing.write(reinterpret_cast<const char*>(&player_data[i].board_y), sizeof(player_data[i].board_y));
-
-        //write the board values
-        for (int x = 0; x < player_data[i].board_x; x++)
-        {
-            for (int y = 0; y < player_data[i].board_y; y++)
-            {
-                file_writing.write(reinterpret_cast<const char*>(&player_data[i].previous_board_pointer[x][y]), sizeof(int));
-            }
-        }
-
         i++;
     }
 
@@ -87,40 +47,15 @@ bool readingPlayerData(string file_name, PlayerData player_data[])
     }
 
     int i = 0;
-    while (file_reading.peek() != EOF)
+    while (!file_reading.eof())
     {
         //read name
         std::getline(file_reading, player_data[i].name, '\0');
 
         //read record time
-        file_reading.read(reinterpret_cast<char*>(&player_data[i].record_time), sizeof(player_data[i].record_time));
-
-        //read previous game 
-        file_reading.read(reinterpret_cast<char*>(&player_data[i].previous_game), sizeof(player_data[i].previous_game));
-
-        if (player_data[i].previous_game == false)
+        for (int j = 0; j < 3; j++)
         {
-            continue; //there is no game to load, continue onto the next player data set
-        }
-
-        //read board x and board y
-        file_reading.read(reinterpret_cast<char*>(&player_data[i].board_x), sizeof(player_data[i].board_x));
-        file_reading.read(reinterpret_cast<char*>(&player_data[i].board_y), sizeof(player_data[i].board_y));
-
-        //allocate memory for game board array
-        player_data[i].previous_board_pointer = new int* [player_data[i].board_x];
-        for (int x = 0; x < player_data[i].board_x; x++)
-        {
-            player_data[i].previous_board_pointer[x] = new int[player_data[i].board_y];
-        }
-
-        //read the board values
-        for (int x = 0; x < player_data[i].board_x; x++)
-        {
-            for (int y = 0; y < player_data[i].board_y; y++)
-            {
-                file_reading.read(reinterpret_cast<char*>(&player_data[i].previous_board_pointer[x][y]), sizeof(int));
-            }
+            file_reading.read(reinterpret_cast<char*>(&player_data[i].record_time[j]), sizeof(int));
         }
 
         i++;
@@ -130,7 +65,7 @@ bool readingPlayerData(string file_name, PlayerData player_data[])
     return true;
 }
 
-void savePlayerData(PlayerData player_data[], PlayerData current_player)
+void savePlayerData(PlayerData player_data[], PlayerData &current_player)
 {
     int i = 0;
     while (player_data[i].name != current_player.name)
@@ -141,11 +76,6 @@ void savePlayerData(PlayerData player_data[], PlayerData current_player)
     player_data[i].record_time[0] = current_player.record_time[0];
     player_data[i].record_time[1] = current_player.record_time[1];
     player_data[i].record_time[2] = current_player.record_time[2];
-
-    player_data[i].board_x = current_player.board_x;
-    player_data[i].board_y = current_player.board_y;
-
-    player_data[i].previous_board_pointer = current_player.previous_board_pointer;
 }
 
 void loadPlayerData(PlayerData player_data[], PlayerData& current_player, string name)
@@ -160,11 +90,36 @@ void loadPlayerData(PlayerData player_data[], PlayerData& current_player, string
     current_player.record_time[0] = player_data[i].record_time[0];
     current_player.record_time[1] = player_data[i].record_time[1];
     current_player.record_time[2] = player_data[i].record_time[2];
-
-    current_player.board_x = player_data[i].board_x;
-    current_player.board_y = player_data[i].board_y;
-
-    current_player.previous_board_pointer = player_data[i].previous_board_pointer;
 }
 
+void top5Time(PlayerData player_data[], PlayerData sorted[5], int difficulty)
+{
+    for (int i = 0; i < 5; i++)
+    {
+        int j = 0;
+        int min_time = player_data[j].record_time[difficulty];
+        int min_time_position = 0;
+        while (player_data[j].name != "")
+        {
+            if (player_data[j].record_time[difficulty] < min_time)
+            {
+                for (int k = 0; k < i; k++)
+                {
+                    if (min_time == sorted[k].record_time[difficulty])
+                    {
+                        min_time = player_data[j].record_time[difficulty];
+                        min_time_position = j;
+                    }
+                }
+                if (i == 0)
+                {
+                    min_time = player_data[j].record_time[difficulty];
+                    min_time_position = j;
+                }
+            }
+            j++;
+        }
+        sorted[i] = player_data[min_time_position];
+    }
+}
 

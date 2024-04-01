@@ -111,7 +111,7 @@ void printSettingsMenu(int current_option, int previous_option, int volume, bool
 }
 
 //printing and updating the main menu
-void printMainMenu(int current_option, int previous_option, bool change_option, PlayerData current_player)
+void printMainMenu(int current_option, int previous_option, bool change_option, PlayerData current_player, bool returning)
 {
 	if (change_option)
 	{
@@ -144,11 +144,21 @@ void printMainMenu(int current_option, int previous_option, bool change_option, 
 	cout << "|     |                            Setting                            |                               |     |" << "\n"; //10
 	cout << "|     |                                                               | Quit game: ESC                |     |" << "\n"; //11
 	cout << "|-----|-----------------------------------------------------------------------------------------------|-----|" << "\n"; //12
-	cout << "|     | Player name:                                                                                  |     |" << "\n"; //13
+	cout << "|     | Player name:                                                  |                               |     |" << "\n"; //13
 	cout << "|-----|-----------------------------------------------------------------------------------------------|-----|" << "\n"; //14
+	
 	setCursorPosition(22, 13); cout << current_player.name;
+	if (returning) 
+	{
+		setCursorPosition(81, 13);
+		cout << "Welcome back!";
+	}
+	else
+	{
+		setCursorPosition(78, 13);
+		cout << "Welcome new player!";
+	}
 	setCursorPosition(0, 0);
-
 }
 
 //printing and updating the menu containing everything before the game starts
@@ -265,13 +275,56 @@ void printGameplayFrame(int board_x, int board_y)
 	cout << "[]" << "\n";
 }
 
-void printLeaderboardScreen(PlayerData player_data[], bool change_option)
+void printLeaderboardScreen(PlayerData player_data[], int difficulty_sorting)
 {
 	system("cls");
+	cout << "|-----|-----------------------------------------------------------------------------------------------|-----|" << "\n"; //0
+	cout << "|     |                                          Leaderboard                                          |     |" << "\n"; //1
+	cout << "|-----|-----------------------------------------------------------------------------------------------|-----|" << "\n"; //2
+	cout << "|     |                                                               |           Controls:           |     |" << "\n"; //3
+	cout << "|     |                                                               |                               |     |" << "\n"; //4
+	cout << "|     |                                                               | Difficulty sorting:           |     |" << "\n"; //5
+	cout << "|     |                                                               | Easy:   1                     |     |" << "\n"; //6
+	cout << "|     |                                                               | Normal: 2                     |     |" << "\n"; //7 
+	cout << "|     |                                                               | Hard:   3                     |     |" << "\n"; //8
+	cout << "|     |                                                               |                               |     |" << "\n"; //9
+	cout << "|     |                                                               |                               |     |" << "\n"; //10
+	cout << "|     |                                                               | Return: R                     |     |" << "\n"; //11
+	cout << "|-----|-----------------------------------------------------------------------------------------------|-----|" << "\n"; //12
+	cout << "|     |                                      Difficulty : Normal                                      |     |" << "\n"; //13
+	cout << "|-----|-----------------------------------------------------------------------------------------------|-----|" << "\n"; //14
+	
+	switch (difficulty_sorting)
+	{
+	case 1:
+		setCursorPosition(58, 13);
+		cout << "Easy  ";
+		break;
+	case 2:
+		setCursorPosition(58, 13);
+		cout << "Normal";
+		break;
+	case 3:
+		setCursorPosition(58, 13);
+		cout << "Hard  ";
+		break;
+	}
+
+	PlayerData sorted[5];
+	top5Time(player_data, sorted, difficulty_sorting);
+
+	for (int i = 0; i < 5; i++)
+	{
+		if (sorted[0].record_time[difficulty_sorting - 1] == -1) continue;
+		setCursorPosition(11, 4 + i);
+		cout << "1: " << sorted[i].name << " /// Time: " << sorted[i].record_time[difficulty_sorting - 1];
+	}
+
+	setCursorPosition(0, 0);
 }
 
 //first screen of everything
-void printLoginScreen(PlayerData player_data[], PlayerData& current_player)
+bool printLoginScreen(PlayerData player_data[], PlayerData& current_player)
 {
 	system("cls");
 	cout << "|-----|-----------------------------------------------------------------------------------------------|-----|" << "\n"; //0
@@ -303,7 +356,7 @@ void printLoginScreen(PlayerData player_data[], PlayerData& current_player)
 		{
 			player_data[i].name = name;
 			current_player.name = name;
-			return;
+			return false;
 		} 
 
 		//if out of space, just overwrite the first slot
@@ -312,7 +365,7 @@ void printLoginScreen(PlayerData player_data[], PlayerData& current_player)
 			i = 0;
 			player_data[i].name = name;
 			current_player.name = name;
-			return;
+			return false;
 		}
 
 		i++;
@@ -320,71 +373,14 @@ void printLoginScreen(PlayerData player_data[], PlayerData& current_player)
 
 	//otherwise, load player data
 	loadPlayerData(player_data, current_player, name);
+	return true;
 }
 
 //
 //gameplay related rendering
 //
 
-//draw a dotted line connecting 2 cells on the board
-/*
-void drawConnection(Point start, Point end)
-{
-	int distance_x = end.first - start.first;
-	int distance_y = end.second - start.second;
-
-	int direction;
-
-	if (distance_x != 0)
-	{
-		direction = distance_x / abs(distance_x);
-		if (direction > 0)
-		{
-			setCursorPosition(8 * start.first + 6, 5 * start.second + 4);
-			cout << "O";
-			for (int i = 0; i < abs(distance_x * 8 - 1); i++) cout << "-";
-			cout << "O";
-		}
-		else
-		{
-			setCursorPosition(8 * end.first + 6, 5 * end.second + 4);
-			cout << "O";
-			for (int i = 0; i < abs(distance_x * 8 + 1); i++) cout << "-";
-			cout << "O";
-		}
-	}
-	else
-	{
-		direction = distance_y / abs(distance_y);
-		if (direction > 0)
-		{
-			setCursorPosition(8 * start.first + 6, 5 * start.second + 4);
-			cout << "O";
-			for (int i = 0; i < abs(5 * distance_y - 1); i++)
-			{
-				setCursorPosition(8 * start.first + 6, 5 * start.second + 5 + i);
-				cout << "|";
-			}
-			setCursorPosition(8 * end.first + 6, 5 * end.second + 4);
-			cout << "O";
-		}
-		else
-		{
-			setCursorPosition(8 * end.first + 6, 5 * end.second + 4);
-			cout << "O";
-			for (int i = 0; i < abs(5 * distance_y + 9); i++)
-			{
-				setCursorPosition(8 * end.first + 6, 5 * end.second + 5 + i);
-				cout << "|";
-			}
-			setCursorPosition(8 * start.first + 6, 5 * start.second + 4);
-			cout << "O";
-		}
-	}
-}
-*/
-
-//improved code using chat gpt, needs reference
+//needs reference
 void drawConnection(Point points[4])
 {
 	int number_of_points = 4;

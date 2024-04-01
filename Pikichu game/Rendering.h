@@ -9,10 +9,11 @@ void setCursorPosition(int x, int y);
 //menu
 void resizeConsole(int width, int height, short bufferWidth, short bufferHeight);
 void printSettingsMenu(int current_option, int previous_option, int volume, bool light_mode, bool change_option, bool render);
-void printMainMenu(int current_option, int previous_option, bool change_option, PlayerData current_player);
+void printMainMenu(int current_option, int previous_option, bool change_option, PlayerData current_player, bool returning);
 void printGameplayPresetScreen(int difficulty, bool change_option);
 void printGameplayFrame(int board_x, int board_y);
-void printLoginScreen(PlayerData player_data[], PlayerData& current_player);
+bool printLoginScreen(PlayerData player_data[], PlayerData& current_player);
+void printLeaderboardScreen(PlayerData player_data[], int difficulty_sorting);
 
 //gameplay
 void drawConnection(Point points[4]);
