@@ -38,7 +38,7 @@ void setCursorPosition(int x, int y)
 }
 
 //printing and updating the settings menu
-void printSettingsMenu(int current_option, int previous_option, int volume, bool light_mode, bool change_option, bool render)
+void printSettingsMenu(int current_option, int previous_option, bool light_mode, bool change_option, bool render, bool soundEnable)
 {
 	if (change_option)
 	{
@@ -48,16 +48,11 @@ void printSettingsMenu(int current_option, int previous_option, int volume, bool
 		setCursorPosition(14, 2 * previous_option + 2);
 		cout << "    ";
 
-		setCursorPosition(30, 4);
-		for (int i = 0; i < volume; i++)
-			cout << "\xDB";
-		for (int i = 0; i < 10 - volume; i++)
-			cout << " ";
-		cout << "> ";
-		if (volume != 10)
-			cout << 10 * volume << "% ";
+		setCursorPosition(20, 4);
+		if (soundEnable == true)
+			cout << "Volume: On ";
 		else
-			cout << "100%";
+			cout << "Volume: Off";
 
 		setCursorPosition(20, 6);
 		if (light_mode == true)
@@ -73,7 +68,7 @@ void printSettingsMenu(int current_option, int previous_option, int volume, bool
 		cout << "|     |                                            Settings                                           |     |" << "\n"; //1
 		cout << "|-----|-----------------------------------------------------------------------------------------------|-----|" << "\n"; //2
 		cout << "|     |                                                               |           Controls:           |     |" << "\n"; //3
-		cout << "|     |             Volume: <\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB\xDB> 100%                         | Up:   W                       |     |" << "\n";; //4
+		cout << "|     |             Volume: ON                                        | Up:   W                       |     |" << "\n"; //4
 		cout << "|     |                                                               | Down: S                       |     |" << "\n"; //5
 		cout << "|     |             Light mode: Off                                   |                               |     |" << "\n"; //6 
 		cout << "|     |                                                               | Increase: D                   |     |" << "\n"; //7
@@ -91,16 +86,11 @@ void printSettingsMenu(int current_option, int previous_option, int volume, bool
 		setCursorPosition(14, 2 * previous_option + 2);
 		cout << "    ";
 
-		setCursorPosition(30, 4);
-		for (int i = 0; i < volume; i++)
-			cout << "\xDB";
-		for (int i = 0; i < 10 - volume; i++)
-			cout << " ";
-		cout << "> ";
-		if (volume != 10)
-			cout << 10 * volume << "% ";
+		setCursorPosition(20, 4);
+		if (soundEnable == true)
+			cout << "Volume: On ";
 		else
-			cout << "100%";
+			cout << "Volume: Off";
 
 		setCursorPosition(20, 6);
 		if (light_mode == true)

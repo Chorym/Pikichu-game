@@ -11,4 +11,4 @@ bool isClearedLine(Point start, Point end, int** game_board_array);
 bool isLshapeLine(Point start, Point end, int** game_board_array, Point& middle_a);
 bool isUShapeLine(Point start, Point end, int** game_board_array, int board_x, int board_y, Point& middle_a, Point& middle_b);
 bool isZShapeLine(Point start, Point end, int** game_board_array, int board_x, int board_y, Point& middle_a, Point& middle_b);
-bool checkIfPossible(int** game_board_array, int board_x, int board_y);
+bool checkIfPossible(int** game_board_array, int** game_board_array_pointer, int board_x, int board_y);

@@ -25,8 +25,8 @@
     <Filter Include="Source Files\Controls">
       <UniqueIdentifier>{96be3f99-4eba-4d7f-90c9-dba849027425}</UniqueIdentifier>
     </Filter>
-    <Filter Include="Resource Files\SFX">
-      <UniqueIdentifier>{ff24d404-730e-446f-ad9b-87475812ac3d}</UniqueIdentifier>
+    <Filter Include="Source Files\Sound effects">
+      <UniqueIdentifier>{9bb3f33f-ee91-4a5e-8b88-bda2de19b7cc}</UniqueIdentifier>
     </Filter>
   </ItemGroup>
   <ItemGroup>
@@ -56,6 +56,9 @@
     <ClCompile Include="Player_data_manip.cpp">
       <Filter>Source Files\Gameplay</Filter>
     </ClCompile>
+    <ClCompile Include="Sound.cpp">
+      <Filter>Source Files\Sound effects</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Controls.h">
@@ -70,10 +73,8 @@
     <ClInclude Include="Player_data_manip.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <Media Include="D:\Games\maimai Editor\Majdata\SFX\answer.wav">
-      <Filter>Resource Files\SFX</Filter>
-    </Media>
+    <ClInclude Include="Sound.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

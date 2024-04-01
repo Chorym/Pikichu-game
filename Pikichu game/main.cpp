@@ -4,6 +4,7 @@
 #include "Game_logic.h"
 #include "Rendering.h"
 #include "Player_data_manip.h"
+#include "Sound.h"
 
 using std::make_pair;
 using std::string;
@@ -52,8 +53,7 @@ int main()
 	srand(time(0));
 
 	bool run = true;
-
-	int volume = 10;
+	bool soundEnable = true;
 	bool light_mode = false;
 
 	//-2 for the actual size, as 2 is reserved for the rim
@@ -75,13 +75,13 @@ int main()
 	printMainMenu(0, 0, false, current_player);
 	while (run)
 	{
-		if (menuInteraction(volume, light_mode, board_x, board_y, difficulty, load_game, current_player) == true)
+		if (menuInteraction(light_mode, board_x, board_y, difficulty, load_game, current_player, soundEnable) == true)
 		{
 			//start game
 			if (board_x == 12) resizeConsole(1401, 930, 200, 200);
 			else if (board_x == 10) resizeConsole(1201, 780, 200, 200);
 			else if (board_x == 8) resizeConsole(1001, 630, 200, 200);
-			gameplayLoop(board_x, board_y, difficulty, game_board_array, load_game, current_player);
+			gameplayLoop(board_x, board_y, difficulty, game_board_array, load_game, current_player, soundEnable);
 
 			//print the menu again after a game is done
 			resizeConsole(905, 600, 200, 200);

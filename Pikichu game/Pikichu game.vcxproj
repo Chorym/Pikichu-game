@@ -133,6 +133,7 @@
     <ClCompile Include="Controls.cpp" />
     <ClCompile Include="Player_data_manip.cpp" />
     <ClCompile Include="Rendering.cpp" />
+    <ClCompile Include="Sound.cpp" />
   </ItemGroup>
   <ItemGroup>
     <Text Include="debug.txt" />
@@ -143,9 +144,7 @@
     <ClInclude Include="Game_logic.h" />
     <ClInclude Include="Player_data_manip.h" />
     <ClInclude Include="Rendering.h" />
-  </ItemGroup>
-  <ItemGroup>
-    <Media Include="D:\Games\maimai Editor\Majdata\SFX\answer.wav" />
+    <ClInclude Include="Sound.h" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

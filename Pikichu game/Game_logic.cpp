@@ -336,17 +336,20 @@ bool isZShapeLine(Point start, Point end, int** game_board_array, int board_x, i
 	return false;
 }
 
-bool checkIfPossible(int** game_board_array, int board_x, int board_y)
+bool checkIfPossible(int** game_board_array, int** game_board_array_pointer, int board_x, int board_y)
 {
 	Point middle_1 = make_pair(-1, -1);
 	Point middle_2 = make_pair(-1, -1);
+	Point start;
+	Point end;
 
 	//Select start point
 	for (int a = 0; a < board_x; a++)
 	{
 		for (int b = 0; b < board_y; b++)
 		{
-			Point start = make_pair(a, b);
+			if (game_board_array_pointer[a][b] == -1) continue;
+			start = make_pair(a, b);
 
 			//Select end point ( != start )
 			for (int c = 0; c < board_x; c++)
@@ -354,7 +357,8 @@ bool checkIfPossible(int** game_board_array, int board_x, int board_y)
 				for (int d = 0; d < board_y; d++)
 				{
 					if (c == a && d == b) continue;
-					Point end = make_pair(c, d);
+					if (game_board_array_pointer[c][d] == -1 || game_board_array_pointer[c][d] != game_board_array_pointer[a][b]) continue;
+					end = make_pair(c, d);
 
 					if (
 						isClearedLine(start, end, game_board_array) ||

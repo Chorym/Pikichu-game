@@ -1,16 +1,13 @@
 #include <iostream>
 #include <algorithm>
 #include <random>
-
-//playsound
 #include <Windows.h>
-#include <mmsystem.h>
-#include <playsoundapi.h>
-#pragma comment(lib, "Winmm.lib")
 
 #include "Rendering.h"
 #include "Game_logic.h"
 #include "Player_data_manip.h"
+#include "Sound.h"
+
 
 using std::cout;
 using std::make_pair;
@@ -20,7 +17,7 @@ bool isPressing(int key)
 	return GetAsyncKeyState(key) & 0x8000;
 }
 
-void gameplayLoop(int board_x, int board_y, int difficulty, int** &game_board_array, bool &load_game, PlayerData &current_player)
+void gameplayLoop(int board_x, int board_y, int difficulty, int** &game_board_array, bool &load_game, PlayerData &current_player, bool soundEnable)
 {
 	//calculate timer
 	int max_time = (9 - (2 * difficulty)) * 60; //difficulty is 1 / 2 / 3 for 7 / 5 / 3 mins
@@ -48,7 +45,7 @@ void gameplayLoop(int board_x, int board_y, int difficulty, int** &game_board_ar
 		game_board_array = generateGameBoard(board_x, board_y, game_board_array, true);
 
 		//check if the board is playable, else make a new one
-		while (!checkIfPossible(game_board_array, board_x, board_y))
+		while (!checkIfPossible(game_board_array, game_board_array, board_x, board_y))
 		{
 			delete[]game_board_array;
 			game_board_array = nullptr;
@@ -174,6 +171,7 @@ void gameplayLoop(int board_x, int board_y, int difficulty, int** &game_board_ar
 					selectCell(game_board_array, current_point);
 				}
 			}
+			
 			key_pressed_E = true;
 		}
 		if (!(isPressing('E')) && key_pressed_E) key_pressed_E = false;
@@ -225,7 +223,7 @@ void gameplayLoop(int board_x, int board_y, int difficulty, int** &game_board_ar
 				cout << current_cells_on_board << "  ";
 
 				//check if the board is still playable after a pair is removed
-				if (!checkIfPossible(game_board_array, board_x, board_y))
+				if (!checkIfPossible(game_board_array, game_board_array, board_x, board_y))
 				{
 					std::shuffle(game_board_array, game_board_array + (board_x * board_y), std::mt19937(std::random_device()()));
 				}
@@ -281,7 +279,7 @@ void gameplayLoop(int board_x, int board_y, int difficulty, int** &game_board_ar
 	}
 }
 
-bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, int& difficulty, bool &load_game, PlayerData &current_player)
+bool menuInteraction(bool& light_mode, int& board_x, int& board_y, int& difficulty, bool &load_game, PlayerData &current_player, bool &soundEnable)
 {
 	bool run = true;
 
@@ -314,7 +312,7 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 			case 0:
 				printMainMenu(current_option, previous_option, true, current_player); break;
 			case 1:
-				printSettingsMenu(current_option, previous_option, volume, light_mode, true, false); break;
+				printSettingsMenu(current_option, previous_option, light_mode, true, false, soundEnable); break;
 			}
 			Sleep(200);
 		}
@@ -331,7 +329,7 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 			case 0:
 				printMainMenu(current_option, previous_option, true, current_player); break;
 			case 1:
-				printSettingsMenu(current_option, previous_option, volume, light_mode, true, false); break;
+				printSettingsMenu(current_option, previous_option, light_mode, true, false, soundEnable); break;
 			}
 			Sleep(200);
 		}
@@ -339,13 +337,6 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 		//Changing settings in settings and game menu
 		if (isPressing('A') && !isPressing('W') && !isPressing('S'))
 		{
-			if (current_menu == 1 && current_option == 1)
-			{
-				volume--;
-				if (volume < 1) volume = 10;
-				printSettingsMenu(current_option, previous_option, volume, light_mode, true, false);
-				PlaySound(L"C:\\Users\\PC\\source\\repos\\Pikichu game\\SFX\\break.wav", NULL, SND_FILENAME | SND_ASYNC);
-			}
 			if (current_menu == 2)
 			{
 				difficulty--;
@@ -359,12 +350,6 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 		}
 		else if (isPressing('D') && !isPressing('W') && !isPressing('S'))
 		{
-			if (current_menu == 1 && current_option == 1)
-			{
-				volume++;
-				if (volume > 10) volume = 1;
-				printSettingsMenu(current_option, previous_option, volume, light_mode, true, false);
-			}
 			if (current_menu == 2)
 			{
 				difficulty++;
@@ -417,7 +402,7 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 					current_menu = 1;
 					current_option = 1;
 					previous_option = 1;
-					printSettingsMenu(current_option, previous_option, volume, light_mode, true, true); 
+					printSettingsMenu(current_option, previous_option, light_mode, true, true, soundEnable);
 					setCursorPosition(14, 2 * current_option + 2);
 					cout << ">>>>";
 				}
@@ -425,6 +410,12 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 			//settings menu
 			else if (current_menu == 1)
 			{
+				if (current_option == 1)
+				{
+					soundEnable = !soundEnable;
+					printSettingsMenu(current_option, previous_option, light_mode, true, true, soundEnable);
+				}
+
 				if (current_option == 2)
 				{
 					light_mode = !light_mode;
@@ -437,9 +428,10 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 					{
 						cout << "\x1b[0m";
 					}
-					printSettingsMenu(current_option, previous_option, volume, light_mode, true, true);
+					printSettingsMenu(current_option, previous_option, light_mode, true, true, soundEnable);
 				}
 			}
+			chooseSound(soundEnable);
 			Sleep(200);
 		}
 
@@ -450,6 +442,7 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 			current_option = 1;
 			previous_option = 1;
 			printMainMenu(0, 0, false, current_player);
+			chooseSound(soundEnable);
 		}
 
 		//start game
@@ -476,6 +469,7 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 			Sleep(200);
 			load_game = false;
 			return true;
+			chooseSound(soundEnable);
 		}
 
 		if (isPressing(VK_ESCAPE) && current_menu == 0)
