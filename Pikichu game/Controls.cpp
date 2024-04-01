@@ -315,7 +315,6 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 				volume++;
 				if (volume > 10) volume = 1;
 				printSettingsMenu(current_option, previous_option, volume, light_mode, true, false);
-				PlaySound(L"C:\\Users\\PC\\source\\repos\\Pikichu game\\SFX\\break.wav", NULL, SND_FILENAME | SND_ASYNC);
 			}
 			if (current_menu == 2)
 			{

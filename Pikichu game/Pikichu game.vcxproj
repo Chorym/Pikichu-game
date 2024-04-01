@@ -141,6 +141,9 @@
     <ClInclude Include="Game_logic.h" />
     <ClInclude Include="Rendering.h" />
   </ItemGroup>
+  <ItemGroup>
+    <Media Include="D:\Games\maimai Editor\Majdata\SFX\answer.wav" />
+  </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">
   </ImportGroup>

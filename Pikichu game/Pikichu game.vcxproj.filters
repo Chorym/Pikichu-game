@@ -25,6 +25,9 @@
     <Filter Include="Source Files\Controls">
       <UniqueIdentifier>{96be3f99-4eba-4d7f-90c9-dba849027425}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Resource Files\SFX">
+      <UniqueIdentifier>{ff24d404-730e-446f-ad9b-87475812ac3d}</UniqueIdentifier>
+    </Filter>
   </ItemGroup>
   <ItemGroup>
     <Text Include="debug.txt">
@@ -58,5 +61,10 @@
     <ClInclude Include="Rendering.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <Media Include="D:\Games\maimai Editor\Majdata\SFX\answer.wav">
+      <Filter>Resource Files\SFX</Filter>
+    </Media>
   </ItemGroup>
 </Project>

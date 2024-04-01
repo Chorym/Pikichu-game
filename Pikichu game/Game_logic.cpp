@@ -326,3 +326,34 @@ bool isZShapeLine(Point start, Point end, int** game_board_array, int board_x, i
 
 	return false;
 }
+
+bool checkIfImpossible(int** game_board_array, int board_x, int board_y)
+{
+	Point middle_1 = make_pair(-1, -1);
+	Point middle_2 = make_pair(-1, -1);
+
+	//Select start point
+	for(int a = 0; a < board_x; a++)
+		for (int b = 0; b < board_y; b++)
+		{
+			Point start = make_pair(a, b);
+
+			//Select end point ( != start )
+			for (int c = 0; c < board_x; c++)
+				for (int d = 0; d < board_y; d++)
+				{
+					if (c == a && d == b) continue;
+					Point end = make_pair(a, b);
+
+					//Conditions if true, return true
+					if (
+						isClearedLine(start, end, game_board_array)											||
+						isLshapeLine(start, end, game_board_array, middle_1)								||
+						isUShapeLine(start, end, game_board_array, board_x, board_y, middle_1, middle_2)	||
+						isZShapeLine(start, end, game_board_array, board_x, board_y, middle_1, middle_2)
+						)
+						return true;
+				}
+		}
+	return false;
+}

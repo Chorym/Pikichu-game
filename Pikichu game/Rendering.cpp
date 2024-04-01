@@ -3,6 +3,9 @@
 #include <random>
 #include <utility>
 #include <math.h>
+#include <mmsystem.h>
+
+#pragma comment (lib, "winmm.lib")
 
 using std::cout;
 
@@ -259,6 +262,7 @@ void printGameplayFrame(int board_x, int board_y)
 	for (int i = 0; i < board_x * 5 + 3; i++) cout << "-";
 	cout << "[]" << "\n";
 }
+
 
 //
 //gameplay related rendering
