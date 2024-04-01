@@ -47,9 +47,6 @@
     <ClCompile Include="Rendering.cpp">
       <Filter>Source Files\Rendering</Filter>
     </ClCompile>
-    <ClCompile Include="Linked_list_mode.cpp">
-      <Filter>Source Files\Gameplay</Filter>
-    </ClCompile>
     <ClCompile Include="Player_data_manip.cpp">
       <Filter>Source Files\Gameplay</Filter>
     </ClCompile>

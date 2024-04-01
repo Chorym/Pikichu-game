@@ -128,7 +128,6 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClCompile Include="Game_logic.cpp" />
-    <ClCompile Include="Linked_list_mode.cpp" />
     <ClCompile Include="main.cpp" />
     <ClCompile Include="Controls.cpp" />
     <ClCompile Include="Player_data_manip.cpp" />
