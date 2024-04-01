@@ -3,9 +3,8 @@
 #include <random>
 #include <utility>
 #include <math.h>
-#include <mmsystem.h>
-
-#pragma comment (lib, "winmm.lib")
+#include "Game_logic.h"
+#include "Player_data_manip.h"
 
 using std::cout;
 
@@ -112,7 +111,7 @@ void printSettingsMenu(int current_option, int previous_option, int volume, bool
 }
 
 //printing and updating the main menu
-void printMainMenu(int current_option, int previous_option, bool change_option)
+void printMainMenu(int current_option, int previous_option, bool change_option, PlayerData current_player)
 {
 	if (change_option)
 	{
@@ -138,15 +137,18 @@ void printMainMenu(int current_option, int previous_option, bool change_option)
 	cout << "|     |                                                               |           Controls:           |     |" << "\n"; //3
 	cout << "|     |                       >>    Start    <<                       |                               |     |" << "\n"; //4
 	cout << "|     |                                                               | Up:      W                    |     |" << "\n"; //5
-	cout << "|     |                          Leaderboard                          | Down:    S                    |     |" << "\n"; //6
+	cout << "|     |                           Load game                           | Down:    S                    |     |" << "\n"; //6
 	cout << "|     |                                                               | Confirm: E                    |     |" << "\n"; //7 
-	cout << "|     |                            Setting                            |                               |     |" << "\n"; //8
+	cout << "|     |                          Leaderboard                          |                               |     |" << "\n"; //8
 	cout << "|     |                                                               |                               |     |" << "\n"; //9
-	cout << "|     |                           Quit game                           |                               |     |" << "\n"; //10
-	cout << "|     |                                                               |                               |     |" << "\n"; //11
+	cout << "|     |                            Setting                            |                               |     |" << "\n"; //10
+	cout << "|     |                                                               | Quit game: ESC                |     |" << "\n"; //11
 	cout << "|-----|-----------------------------------------------------------------------------------------------|-----|" << "\n"; //12
-	cout << "|     |                                                                                               |     |" << "\n"; //13
+	cout << "|     | Player name:                                                                                  |     |" << "\n"; //13
 	cout << "|-----|-----------------------------------------------------------------------------------------------|-----|" << "\n"; //14
+	setCursorPosition(22, 13); cout << current_player.name;
+	setCursorPosition(0, 0);
+
 }
 
 //printing and updating the menu containing everything before the game starts
@@ -250,7 +252,7 @@ void printGameplayFrame(int board_x, int board_y)
 	setCursorPosition(board_x * 11 - 7, 7);
 	cout << "Left:  A   |   Deselect: Q";
 	setCursorPosition(board_x * 11 - 7, 8);
-	cout << "Down:  S   |";
+	cout << "Down:  S   |   Help: H (non-functional)";
 	setCursorPosition(board_x * 11 - 7, 9);
 	cout << "Right: D   |   End game: F";
 
@@ -263,12 +265,69 @@ void printGameplayFrame(int board_x, int board_y)
 	cout << "[]" << "\n";
 }
 
+void printLeaderboardScreen(PlayerData player_data[], bool change_option)
+{
+	system("cls");
+}
+
+//first screen of everything
+void printLoginScreen(PlayerData player_data[], PlayerData& current_player)
+{
+	system("cls");
+	cout << "|-----|-----------------------------------------------------------------------------------------------|-----|" << "\n"; //0
+	cout << "|     |                                    Untitled Matching Game                                     |     |" << "\n"; //1
+	cout << "|-----|-----------------------------------------------------------------------------------------------|-----|" << "\n"; //2
+	cout << "|     |                                                               |             Login             |     |" << "\n"; //3
+	cout << "|     |                       >>    Start    <<                       |                               |     |" << "\n"; //4
+	cout << "|     |                                                               | Name:                         |     |" << "\n"; //5
+	cout << "|     |                           Load game                           |                               |     |" << "\n"; //6
+	cout << "|     |                                                               |                               |     |" << "\n"; //7 
+	cout << "|     |                          Leaderboard                          |                               |     |" << "\n"; //8
+	cout << "|     |                                                               |                               |     |" << "\n"; //9
+	cout << "|     |                            Setting                            |                               |     |" << "\n"; //10
+	cout << "|     |                                                               |                               |     |" << "\n"; //11
+	cout << "|-----|-----------------------------------------------------------------------------------------------|-----|" << "\n"; //12
+	cout << "|     |                                                                                               |     |" << "\n"; //13
+	cout << "|-----|-----------------------------------------------------------------------------------------------|-----|" << "\n"; //14
+
+
+	setCursorPosition(78, 5);
+	string name;
+	std::getline(std::cin, name);
+
+	int i = 0;
+	while (player_data[i].name != name)
+	{
+		//if new name, assign a new spot for that name
+		if (player_data[i].name == "" && i < 30)
+		{
+			player_data[i].name = name;
+			current_player.name = name;
+			return;
+		} 
+
+		//if out of space, just overwrite the first slot
+		if (i == 30)
+		{
+			i = 0;
+			player_data[i].name = name;
+			current_player.name = name;
+			return;
+		}
+
+		i++;
+	}
+
+	//otherwise, load player data
+	loadPlayerData(player_data, current_player, name);
+}
 
 //
 //gameplay related rendering
 //
 
 //draw a dotted line connecting 2 cells on the board
+/*
 void drawConnection(Point start, Point end)
 {
 	int distance_x = end.first - start.first;
@@ -283,20 +342,14 @@ void drawConnection(Point start, Point end)
 		{
 			setCursorPosition(8 * start.first + 6, 5 * start.second + 4);
 			cout << "O";
-			for (int i = 0; i < abs(distance_x * 8 - 1); i++)
-			{
-				cout << "-";
-			}
+			for (int i = 0; i < abs(distance_x * 8 - 1); i++) cout << "-";
 			cout << "O";
 		}
 		else
 		{
 			setCursorPosition(8 * end.first + 6, 5 * end.second + 4);
 			cout << "O";
-			for (int i = 0; i < abs(distance_x * 8 - 1); i++)
-			{
-				cout << "-";
-			}
+			for (int i = 0; i < abs(distance_x * 8 + 1); i++) cout << "-";
 			cout << "O";
 		}
 	}
@@ -305,43 +358,149 @@ void drawConnection(Point start, Point end)
 		direction = distance_y / abs(distance_y);
 		if (direction > 0)
 		{
-			setCursorPosition(8 * start.first + 5, 5 * start.second + 1);
+			setCursorPosition(8 * start.first + 6, 5 * start.second + 4);
 			cout << "O";
-			for (int i = 0; i < abs(5 * distance_y + 1); i++)
+			for (int i = 0; i < abs(5 * distance_y - 1); i++)
 			{
-				setCursorPosition(8 * start.first + 5, 5 * start.second + 1 + i);
+				setCursorPosition(8 * start.first + 6, 5 * start.second + 5 + i);
 				cout << "|";
 			}
-			setCursorPosition(8 * end.first + 5, 5 * end.second + 3);
+			setCursorPosition(8 * end.first + 6, 5 * end.second + 4);
 			cout << "O";
 		}
 		else
 		{
-			setCursorPosition(8 * end.first + 5, 5 * end.second + 1);
+			setCursorPosition(8 * end.first + 6, 5 * end.second + 4);
 			cout << "O";
-			for (int i = 0; i < abs(5 * distance_y + 1); i++)
+			for (int i = 0; i < abs(5 * distance_y + 9); i++)
 			{
-				setCursorPosition(8 * end.first + 5, 5 * end.second + 1 + i);
+				setCursorPosition(8 * end.first + 6, 5 * end.second + 5 + i);
 				cout << "|";
 			}
-			setCursorPosition(8 * start.first + 5, 5 * start.second + 3);
+			setCursorPosition(8 * start.first + 6, 5 * start.second + 4);
 			cout << "O";
 		}
 	}
 }
+*/
 
-void clear2DArray(int** array, int board_x)
+//improved code using chat gpt, needs reference
+void drawConnection(Point points[4])
 {
+	int number_of_points = 4;
+	Point empty = std::make_pair(-1, -1);
+
+	for (int i = 0; i < 4; i++)
+	{
+		if (points[i] == empty) number_of_points--;
+	}
+
+	for (int i = 0; i < number_of_points - 1; i++)
+	{
+		Point start = points[i];
+		Point end = points[i + 1];
+		
+		int distance_x = end.first - start.first;
+		int distance_y = end.second - start.second;
+
+		int direction_x = (distance_x != 0) ? distance_x / abs(distance_x) : 0;
+		int direction_y = (distance_y != 0) ? distance_y / abs(distance_y) : 0;
+
+		int start_x = 8 * start.first + 6;
+		int start_y = 5 * start.second + 4;
+
+		int end_x = 8 * end.first + 6;
+		int end_y = 5 * end.second + 4;
+
+		int time_millseconds = 250;
+
+		if (distance_x != 0)
+		{
+			setCursorPosition((direction_x > 0) ? start_x : end_x, start_y);
+			cout << "O";
+			for (int i = 0; i < abs(distance_x) * 8 - 1; i++) cout << "-";
+			cout << "O";
+		}
+		else
+		{
+			setCursorPosition(start_x, (direction_y > 0) ? start_y : end_y);
+			cout << "O";
+			for (int i = 0; i < abs(distance_y) * 5 - 1; i++)
+			{
+				setCursorPosition(start_x, (direction_y > 0) ? start_y + 1 + i : end_y + 1 + i);
+				cout << "|";
+			}
+			setCursorPosition(end_x, (direction_y > 0) ? end_y : start_y);
+			cout << "O";
+		}
+	}
+	
+	async_sleep_milliseconds(250);
+
+	for (int i = 0; i < number_of_points - 1; i++)
+	{
+		Point start = points[i];
+		Point end = points[i + 1];
+
+		int distance_x = end.first - start.first;
+		int distance_y = end.second - start.second;
+
+		int direction_x = (distance_x != 0) ? distance_x / abs(distance_x) : 0;
+		int direction_y = (distance_y != 0) ? distance_y / abs(distance_y) : 0;
+
+		int start_x = 8 * start.first + 6;
+		int start_y = 5 * start.second + 4;
+
+		int end_x = 8 * end.first + 6;
+		int end_y = 5 * end.second + 4;
+
+		int time_millseconds = 250;
+
+		if (distance_x != 0)
+		{
+			setCursorPosition((direction_x > 0) ? start_x : end_x, start_y);
+			cout << " ";
+			for (int i = 0; i < abs(distance_x) * 8 - 1; i++) cout << " ";
+			cout << " ";
+		}
+		else
+		{
+			setCursorPosition(start_x, (direction_y > 0) ? start_y : end_y);
+			cout << " ";
+			for (int i = 0; i < abs(distance_y) * 5 - 1; i++)
+			{
+				setCursorPosition(start_x, (direction_y > 0) ? start_y + 1 + i : end_y + 1 + i);
+				cout << " ";
+			}
+			setCursorPosition(end_x, (direction_y > 0) ? end_y : start_y);
+			cout << " ";
+		}
+	}
+}
+
+void clear2DArray(int** &array, int board_x)
+{
+	if (array == nullptr) return;
+
 	for (int i = 0; i < board_x; i++)
 	{
 		delete[]array[i];
 	}
 	delete[]array;
+
+	array = nullptr;
 }
 
-int** generateGameBoard(int board_x, int board_y)
+int** generateGameBoard(int board_x, int board_y, int** &game_board_array_pointer, bool load_new_board)
 {
-	int** game_board_array_pointer = nullptr;
+	//if new game, clear old game before starting to prevent leaks
+	if (game_board_array_pointer != nullptr && load_new_board) 
+		clear2DArray(game_board_array_pointer, board_x);
+	//when there is an old board state and dont want to reset
+	else if (game_board_array_pointer != nullptr && !load_new_board) 
+		return game_board_array_pointer;
+
+	game_board_array_pointer = nullptr;
 	if ((board_x * board_y) % 2 == 1) return game_board_array_pointer;
 
 	game_board_array_pointer = new int* [board_x];

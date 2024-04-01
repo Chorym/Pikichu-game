@@ -1,4 +1,6 @@
 #include <iostream>
+#include <algorithm>
+#include <random>
 
 //playsound
 #include <Windows.h>
@@ -8,6 +10,7 @@
 
 #include "Rendering.h"
 #include "Game_logic.h"
+#include "Player_data_manip.h"
 
 using std::cout;
 using std::make_pair;
@@ -17,20 +20,45 @@ bool isPressing(int key)
 	return GetAsyncKeyState(key) & 0x8000;
 }
 
-void gameplayLoop(int board_x, int board_y, int difficulty)
+void gameplayLoop(int board_x, int board_y, int difficulty, int** &game_board_array, bool &load_game, PlayerData &current_player)
 {
 	//calculate timer
-	int max_time = (9 - (2 * difficulty)) * 60;
+	int max_time = (9 - (2 * difficulty)) * 60; //difficulty is 1 / 2 / 3 for 7 / 5 / 3 mins
 	int start_game_time = currentSystemTime();
 	int current_system_time = currentSystemTime();
 	int previous_second = currentSystemTime();
+	if (load_game)
+	{
+		max_time = current_player.previous_game_time;
+	}
 
 	//
 	printGameplayFrame(board_x, board_y);
 	int current_cells_on_board = (board_x - 2) * (board_y - 2);
+	if (load_game)
+	{
+		current_cells_on_board = current_player.previous_game_cell_amount;
+	}
 
-	//
-	int** game_board_array = generateGameBoard(board_x, board_y);
+	//generate board if dont wanna load game
+	if (!load_game)
+	{
+		delete[]game_board_array;
+		game_board_array = nullptr;
+		game_board_array = generateGameBoard(board_x, board_y, game_board_array, true);
+
+		//check if the board is playable, else make a new one
+		while (!checkIfPossible(game_board_array, board_x, board_y))
+		{
+			delete[]game_board_array;
+			game_board_array = nullptr;
+			game_board_array = generateGameBoard(board_x, board_y, game_board_array, true);
+		}
+	}
+	else
+	{
+		game_board_array = current_player.previous_board_pointer;
+	}
 	drawGameBoard(game_board_array, board_x, board_y);
 
 	//some info about the current board state
@@ -80,8 +108,9 @@ void gameplayLoop(int board_x, int board_y, int difficulty)
 		}
 		if (current_system_time - start_game_time >= max_time)
 		{
-			setCursorPosition(board_x * 11 + 7, 11);
-			cout << "lmao skill issue";
+			//ran out of time
+			clear2DArray(game_board_array, board_x);
+			game_board_array = nullptr;
 			return;
 		}
 
@@ -172,50 +201,72 @@ void gameplayLoop(int board_x, int board_y, int difficulty)
 		{
 			if (pathfinding2Cells(selected_points, mid_points, game_board_array, board_x, board_y))
 			{
-				current_cells_on_board -= 2;
-				setCursorPosition(board_x * 11 + 17, 12);
-				cout << current_cells_on_board << "  ";
 				drawGameBoard(game_board_array, board_x, board_y);
-				drawCurrentCell(game_board_array, current_point, previous_point, selected_points);
 
+				//draw the lines connecting the start and end purely for cosmetic
 				if (mid_points[0] == empty)
 				{
-					drawConnection(selected_points[0], selected_points[1]);
+					Point points[4] = { selected_points[0], selected_points[1], empty, empty };
+					drawConnection(points);
 				}
 				else if (mid_points[1] == empty)
 				{
-					drawConnection(selected_points[0], mid_points[0]);
-					drawConnection(mid_points[0], selected_points[1]);
+					Point points[4] = { selected_points[0], mid_points[0], selected_points[1], empty };
+					drawConnection(points);
 				}
 				else
 				{
-					drawConnection(selected_points[0], mid_points[0]);
-					drawConnection(mid_points[0], mid_points[1]);
-					drawConnection(mid_points[1], selected_points[1]);
+					Point points[4] = { selected_points[0], mid_points[0], mid_points[1], selected_points[1] };
+					drawConnection(points);
+				}
+
+				current_cells_on_board -= 2;
+				setCursorPosition(board_x * 11 + 17, 12);
+				cout << current_cells_on_board << "  ";
+
+				//check if the board is still playable after a pair is removed
+				if (!checkIfPossible(game_board_array, board_x, board_y))
+				{
+					std::shuffle(game_board_array, game_board_array + (board_x * board_y), std::mt19937(std::random_device()()));
 				}
 			}
-			else
-			{
-				drawGameBoard(game_board_array, board_x, board_y);
-				drawCurrentCell(game_board_array, current_point, previous_point, selected_points);
-			}
+			drawGameBoard(game_board_array, board_x, board_y);
+			drawCurrentCell(game_board_array, current_point, previous_point, selected_points);
 			selected_points[0] = empty;
 			selected_points[1] = empty;
 			mid_points[0] = empty;
 			mid_points[1] = empty;
 		}
 
-		if (current_cells_on_board == 0) //u won yay
+		if (current_cells_on_board == 0) 
 		{
-			setCursorPosition(0, 50);
-			cout << "u won yay\n";
+			switch (difficulty)
+			{
+			case 1:
+				current_player.record_time[0] = current_system_time - start_game_time; break;
+			case 2:
+				current_player.record_time[0] = current_system_time - start_game_time; break;
+			case 3:
+				current_player.record_time[0] = current_system_time - start_game_time; break;
+			}
+
+			current_player.previous_game = false;
+
 			run = false;
 		}
 
 		//exit game
 		if (isPressing('F'))
 		{
-			setCursorPosition(0, 50);
+			current_player.previous_game = true;
+
+			current_player.board_x = board_x;
+			current_player.board_y = board_y;
+			current_player.previous_board_pointer = game_board_array;
+
+			current_player.previous_game_time = max_time - (current_system_time - start_game_time);
+			current_player.previous_game_cell_amount = current_cells_on_board;
+
 			run = false;
 		}
 
@@ -228,11 +279,9 @@ void gameplayLoop(int board_x, int board_y, int difficulty)
 			drawCurrentCell(game_board_array, current_point, previous_point, selected_points);
 		}
 	}
-
-	clear2DArray(game_board_array, board_x);
 }
 
-bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, int& difficulty)
+bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, int& difficulty, bool &load_game, PlayerData &current_player)
 {
 	bool run = true;
 
@@ -263,7 +312,7 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 			switch (current_menu)
 			{
 			case 0:
-				printMainMenu(current_option, previous_option, true); break;
+				printMainMenu(current_option, previous_option, true, current_player); break;
 			case 1:
 				printSettingsMenu(current_option, previous_option, volume, light_mode, true, false); break;
 			}
@@ -280,7 +329,7 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 			switch (current_menu)
 			{
 			case 0:
-				printMainMenu(current_option, previous_option, true); break;
+				printMainMenu(current_option, previous_option, true, current_player); break;
 			case 1:
 				printSettingsMenu(current_option, previous_option, volume, light_mode, true, false); break;
 			}
@@ -342,7 +391,28 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 					previous_option = 1;
 					printGameplayPresetScreen(difficulty, false);
 				}
+				if (current_option == 2)
+				{
+					if (current_player.previous_board_pointer == nullptr)
+					{
+						current_menu = 2;
+						current_option = 1;
+						previous_option = 1;
+						printGameplayPresetScreen(difficulty, false);
+					}
+					else
+					{
+						run = false;
+						Sleep(200);
+						load_game = true;
+						return true;
+					}
+				}
 				if (current_option == 3)
+				{
+					//leaderboard
+				}
+				if (current_option == 4)
 				{
 					current_menu = 1;
 					current_option = 1;
@@ -350,12 +420,6 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 					printSettingsMenu(current_option, previous_option, volume, light_mode, true, true); 
 					setCursorPosition(14, 2 * current_option + 2);
 					cout << ">>>>";
-				}
-				if (current_option == 4)
-				{
-					setCursorPosition(0, 16);
-					run = false;
-					return false;
 				}
 			}
 			//settings menu
@@ -380,12 +444,12 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 		}
 
 		//return to previous menu
-		if ((isPressing('R') && current_menu == 1) || (isPressing('R') && current_menu == 2))
+		if ((isPressing('R') && current_menu == 1) || (isPressing('R') && current_menu == 2) || (isPressing('R') && current_menu == 3))
 		{
 			current_menu = 0;
 			current_option = 1;
 			previous_option = 1;
-			printMainMenu(0, 0, false);
+			printMainMenu(0, 0, false, current_player);
 		}
 
 		//start game
@@ -410,7 +474,17 @@ bool menuInteraction(int& volume, bool& light_mode, int& board_x, int& board_y, 
 				break;
 			}
 			Sleep(200);
+			load_game = false;
 			return true;
 		}
+
+		if (isPressing(VK_ESCAPE) && current_menu == 0)
+		{
+			//quit game
+			//potentially show an end screen
+			run = false;
+			return false;
+		}
 	}
+	return false;
 }

@@ -2,6 +2,8 @@
 #include <utility>
 #include <chrono>
 #include <ctime>
+#include <future>
+#include <thread>
 #include "Rendering.h"
 #include "Game_logic.h"
 
@@ -10,8 +12,15 @@ using std::cout;
 
 typedef std::pair<int, int> Point;
 
-#include <iostream>
-#include <chrono>
+//needs referencing
+void async_sleep_milliseconds(int time) 
+{
+	std::chrono::milliseconds duration(time);
+
+	std::async(std::launch::async, [=]() {
+		std::this_thread::sleep_for(duration);
+		});
+}
 
 int currentSystemTime()
 {
@@ -246,8 +255,8 @@ bool isZShapeLine(Point start, Point end, int** game_board_array, int board_x, i
 	int distance_x = end.first - start.first;
 	int distance_y = end.second - start.second;
 
-	int direction_x = distance_x / abs(distance_x);
-	int direction_y = distance_y / abs(distance_y);
+	int direction_x = (distance_x != 0) ? distance_x / abs(distance_x) : 0;
+	int direction_y = (distance_y != 0) ? distance_y / abs(distance_y) : 0;
 
 	int middle_path_x = 0;
 	int middle_path_y = 0;
@@ -327,33 +336,36 @@ bool isZShapeLine(Point start, Point end, int** game_board_array, int board_x, i
 	return false;
 }
 
-bool checkIfImpossible(int** game_board_array, int board_x, int board_y)
+bool checkIfPossible(int** game_board_array, int board_x, int board_y)
 {
 	Point middle_1 = make_pair(-1, -1);
 	Point middle_2 = make_pair(-1, -1);
 
 	//Select start point
-	for(int a = 0; a < board_x; a++)
+	for (int a = 0; a < board_x; a++)
+	{
 		for (int b = 0; b < board_y; b++)
 		{
 			Point start = make_pair(a, b);
 
 			//Select end point ( != start )
 			for (int c = 0; c < board_x; c++)
+			{
 				for (int d = 0; d < board_y; d++)
 				{
 					if (c == a && d == b) continue;
-					Point end = make_pair(a, b);
+					Point end = make_pair(c, d);
 
-					//Conditions if true, return true
 					if (
-						isClearedLine(start, end, game_board_array)											||
-						isLshapeLine(start, end, game_board_array, middle_1)								||
-						isUShapeLine(start, end, game_board_array, board_x, board_y, middle_1, middle_2)	||
+						isClearedLine(start, end, game_board_array) ||
+						isLshapeLine(start, end, game_board_array, middle_1) ||
+						isUShapeLine(start, end, game_board_array, board_x, board_y, middle_1, middle_2) ||
 						isZShapeLine(start, end, game_board_array, board_x, board_y, middle_1, middle_2)
 						)
 						return true;
 				}
+			}
 		}
+	}
 	return false;
 }
